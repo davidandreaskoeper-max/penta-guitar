@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pentatonik & Chord-Shapes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Public+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --walnut:#211712; --walnut-2:#2c2018; --parch:#f1e8d6; --parch-2:#e9dcc4;
+    --ink:#2a2018; --ink-soft:#6f6353;
+    --brass:#c98a2f; --brass-glow:#e9bd6c; --copper:#b5531d;
+    --fretwire:#cfc9bd; --string:#8a7a60; --wood:#d8bb86;
+    --line:rgba(255,255,255,.09);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:
+      radial-gradient(120% 80% at 50% -10%, #34261b 0%, var(--walnut) 55%, #160f0b 100%);
+    color:var(--parch); font-family:"Public Sans",system-ui,sans-serif;
+    line-height:1.55; padding:0 18px 80px; overflow-x:hidden;
+  }
+  .wrap{max-width:920px;margin:0 auto}
+
+  /* ---------- header ---------- */
+  header{padding:54px 0 26px;text-align:center;position:relative}
+  .eyebrow{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--brass);opacity:.85;margin:0 0 14px}
+  h1{font-family:"Fraunces",serif;font-weight:900;font-size:clamp(38px,9vw,76px);
+    line-height:.95;margin:0;letter-spacing:-.01em;color:var(--parch)}
+  h1 em{font-style:italic;font-weight:400;color:var(--brass-glow)}
+  .sub{max-width:540px;margin:18px auto 0;color:#cdbfa6;font-size:16px}
+  .sub b{color:var(--parch);font-weight:700}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;
+    margin:32px auto 6px;padding:18px;border:2px solid #b8902f;border-radius:16px;
+    background:
+      radial-gradient(130% 90% at 50% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 42%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 -0.18'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23l)'/%3E%3C/svg%3E"),
+      linear-gradient(180deg,#241710,#170d07 55%,#0e0704);
+    background-size:auto,170px 170px,auto;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 2px 6px rgba(255,255,255,.06),
+      inset 0 -12px 26px rgba(0,0,0,.55),0 7px 18px rgba(0,0,0,.4)}
+  .ctl{display:flex;flex-direction:column;gap:6px}
+  .ctl label{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--brass);opacity:.9}
+  .seg{display:flex;border:1px solid rgba(201,138,47,.4);border-radius:10px;overflow:hidden}
+  .seg button{appearance:none;border:0;background:transparent;color:#d9ccb3;
+    font-family:"Public Sans";font-weight:700;font-size:14px;padding:9px 14px;cursor:pointer;
+    transition:.15s}
+  .seg button[aria-pressed="true"]{background:var(--brass);color:#1c130b}
+  .seg button:focus-visible{outline:2px solid var(--brass-glow);outline-offset:-2px}
+  select{appearance:none;background:#1a120c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c98a2f' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;
+    border:1px solid rgba(201,138,47,.4);color:var(--parch);font-family:"Public Sans";
+    font-weight:700;font-size:15px;padding:9px 34px 9px 12px;border-radius:10px;cursor:pointer}
+  select:focus-visible{outline:2px solid var(--brass-glow)}
+  input[type=color]{appearance:none;-webkit-appearance:none;border:1px solid rgba(201,138,47,.4);
+    border-radius:10px;width:56px;height:41px;padding:3px;background:#1a120c;cursor:pointer}
+  input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+  input[type=color]::-webkit-color-swatch{border:none;border-radius:6px}
+  input[type=color]::-moz-color-swatch{border:none;border-radius:6px}
+  input[type=color]:focus-visible{outline:2px solid var(--brass-glow)}
+
+  .triad-info{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:4px 14px 8px}
+  .triad-info .chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);
+    background:rgba(0,0,0,.04);border:1px solid #d6cbb4;border-radius:999px;padding:5px 12px;font-weight:600}
+  .triad-info .badge{width:19px;height:19px;border-radius:50%;display:inline-flex;align-items:center;
+    justify-content:center;font-family:"Space Mono";font-size:11px;font-weight:700}
+  .triad-info .chip small{font-weight:400;color:var(--ink-soft)}
+  .chord-name{text-align:center;font-family:"Fraunces",serif;color:var(--ink);
+    padding:8px 14px 2px;font-size:15px;line-height:1.4}
+  .chord-name strong{color:var(--copper);font-weight:600;font-size:17px}
+  .chord-name .fn{font-family:"Public Sans";font-size:12.5px;color:var(--ink-soft);font-weight:500}
+  .chord-name .dot{color:var(--ink-soft);margin:0 8px;opacity:.6}
+  .triad-info .chip strong{font-weight:700;color:var(--copper)}
+
+  /* ---------- nav d-pad (centered under fretboard) ---------- */
+  .fb-row{padding:0 8px}
+  .navwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 0 2px}
+  /* real stomp-pedal enclosure, centred under the fretboard */
+  .pedal{position:relative;isolation:isolate;width:max-content;max-width:74%;margin:0 auto;
+    padding:44px 22px 104px;border-radius:14px;
+    background:
+      radial-gradient(circle at 13px 13px, #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
+      radial-gradient(circle at calc(100% - 13px) 13px, #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
+      radial-gradient(circle at 13px calc(100% - 13px), #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
+      radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
+      linear-gradient(180deg,#43474d 0%,#34383e 28%,#2b2f34 52%,#23272c 100%);
+    border:1px solid #0a0b0c;
+    box-shadow:0 20px 34px rgba(0,0,0,.5),0 7px 12px rgba(0,0,0,.45),
+      inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 24px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.045)}
+  /* big slanted tread plate — the foot-stomp face (BOSS hallmark) */
+  .pedal::before{content:"";position:absolute;left:10px;right:10px;bottom:11px;height:53%;z-index:0;pointer-events:none;
+    clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);
+    background:linear-gradient(180deg,#777b81 0%,#5d6167 26%,#4a4e54 62%,#3a3d42 100%);
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.30),inset 0 -6px 13px rgba(0,0,0,.5);
+    border-radius:3px 3px 9px 9px}
+  /* dark seam above the tread plate (hinge gap) */
+  .pedal .hinge{position:absolute;left:18px;right:18px;bottom:calc(11px + 53%);height:4px;z-index:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.15));border-radius:2px}
+  /* status LED near the top */
+  .pedal::after{content:"";position:absolute;top:17px;left:50%;transform:translateX(-50%);
+    width:9px;height:9px;border-radius:50%;z-index:2;pointer-events:none;
+    background:radial-gradient(circle at 40% 35%, #ffe0ac, #ff8c1a 55%, #b04b00 100%);
+    box-shadow:0 0 9px 2px rgba(255,140,26,.7),inset 0 0 2px rgba(255,255,255,.85)}
+  .navpad{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,auto);
+    grid-template-rows:repeat(3,auto);gap:9px;justify-content:center;align-items:center}
+  /* chrome hex-nut stomp footswitch (Treter): faceted hex collar + polished chrome dome */
+  .np{appearance:none;border:0;width:40px;height:40px;background:none;position:relative;isolation:isolate;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    color:#3a3f43;font-size:15px;font-weight:700;font-family:"Space Mono",monospace;
+    filter:drop-shadow(0 6px 7px rgba(0,0,0,.5));transition:transform .08s,filter .12s}
+  /* faceted hex nut / collar */
+  button.np::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+    clip-path:polygon(25% 5%,75% 5%,100% 50%,75% 95%,25% 95%,0 50%);
+    background:conic-gradient(from 30deg,#d4d9dc,#888e93,#e7ebed,#909699,#dbdfe2,#8c9297,#d4d9dc);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)}
+  /* flat brushed-metal button top with fine scratches (no dome) */
+  button.np::after{content:"";position:absolute;inset:12%;border-radius:50%;z-index:2;pointer-events:none;
+    background:
+      repeating-linear-gradient(17deg, rgba(0,0,0,.05) 0 1px, transparent 1px 11px),
+      repeating-linear-gradient(-24deg, rgba(255,255,255,.05) 0 1px, transparent 1px 15px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02 0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 -0.28'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23s)'/%3E%3C/svg%3E"),
+      linear-gradient(180deg,#eef1f3 0%,#dde2e5 46%,#cbd0d4 100%);
+    background-size:auto,auto,90px 90px,auto;
+    box-shadow:inset 0 2px 2px rgba(255,255,255,.7),inset 0 -2px 4px rgba(0,0,0,.3),
+      inset 0 0 0 1px rgba(255,255,255,.45),0 1px 2px rgba(0,0,0,.45);transition:transform .08s,box-shadow .1s}
+  .np .g{position:relative;z-index:3;line-height:1;pointer-events:none;color:#3a3f43;
+    text-shadow:0 1px 0 rgba(255,255,255,.8)}
+  button.np:hover:not(:disabled){filter:drop-shadow(0 8px 10px rgba(0,0,0,.5)) brightness(1.04)}
+  button.np:hover:not(:disabled)::after{box-shadow:inset 0 2px 2px rgba(255,255,255,.7),inset 0 -2px 4px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.45),0 1px 3px rgba(0,0,0,.5),0 0 9px rgba(201,138,47,.5)}
+  button.np:active:not(:disabled){transform:translateY(2px)}
+  button.np:active:not(:disabled)::after{transform:translateY(1px);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.5),inset 0 -1px 1px rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.5)}
+  .np:focus-visible{outline:3px solid var(--brass);outline-offset:5px}
+  .np:disabled{cursor:default;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3)) saturate(.3) brightness(.93) opacity(.85)}
+  .np.up{grid-column:2;grid-row:1}
+  .np.left{grid-column:1;grid-row:2}
+  .np.center{grid-column:2;grid-row:2}
+  .np.right{grid-column:3;grid-row:2}
+  .np.down{grid-column:2;grid-row:3}
+  /* center = amber backlit display screen (the pedal's readout) */
+  .np.center{position:relative;overflow:hidden;width:auto;height:auto;border-radius:7px;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;line-height:1.2;font-family:"Space Mono",monospace;
+    padding:7px 13px;min-width:60px;cursor:default;color:#f0c489;isolation:auto;filter:none;
+    background:radial-gradient(120% 90% at 50% 18%, #2e2a22 0%, #1a1813 55%, #0f0d0a 100%);
+    border:1px solid #000;text-shadow:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 12px rgba(0,0,0,.9),
+      inset 0 0 18px rgba(245,165,70,.12),0 2px 4px rgba(0,0,0,.5),0 0 0 3px #15171a,0 0 0 4px #000}
+  /* glass gloss across the screen */
+  .np.center::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 22%, rgba(255,255,255,0) 42%)}
+  .np.center b{position:relative;z-index:1;font-size:16px;color:#ffc06a;font-weight:700;letter-spacing:.02em;text-shadow:0 0 8px rgba(255,170,70,.7)}
+  .np.center i{position:relative;z-index:1;font-style:normal;font-size:10px;color:#c8aa7e;text-shadow:0 0 6px rgba(255,170,70,.4)}
+  .np-hint{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+    color:#a08a6a;text-align:center}
+
+  /* ---------- neck panel ---------- */
+  .panel{background:linear-gradient(180deg,#f6efe1,var(--parch-2));
+    border-radius:18px;margin:22px 0;padding:18px 6px 10px;
+    box-shadow:0 18px 50px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.6)}
+  .panel-head{display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;padding:0 14px 12px;gap:4px}
+  .panel-head .name{font-family:"Fraunces",serif;font-weight:600;font-size:22px;color:var(--ink)}
+  .panel-head .name b{color:var(--copper)}
+  .panel-head .formula{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft)}
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px 6px}
+  .scroller svg{display:block;max-width:none;margin:0 auto}
+  .swipe-hint{display:none;font-family:"Space Mono",monospace;font-size:10.5px;
+    color:var(--ink-soft);text-align:center;padding:2px 0 6px;letter-spacing:.1em}
+
+  /* ---------- legend ---------- */
+  .legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;
+    padding:10px 14px 4px;font-size:13px;color:var(--ink)}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-weight:500}
+  .key{width:18px;height:18px;border-radius:50%;flex:0 0 auto}
+  .key.root{background:var(--copper)}
+  .key.chord{background:var(--brass);box-shadow:0 0 0 2px rgba(233,189,108,.5)}
+  .key.scale{background:#f6efe1;border:2px solid var(--brass)}
+
+  /* ---------- prose ---------- */
+  .note-box{border-left:3px solid var(--brass);background:rgba(0,0,0,.16);
+    padding:14px 18px;border-radius:0 12px 12px 0;margin:30px 0;color:#d6c9b1;font-size:15px}
+  .note-box b{color:var(--parch)}
+  h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(24px,5vw,34px);
+    margin:48px 0 6px;color:var(--parch);letter-spacing:-.01em}
+  h2 .num{font-family:"Space Mono",monospace;font-size:14px;color:var(--brass);
+    vertical-align:super;margin-right:8px}
+  .lead{color:#c9bca3;max-width:640px;margin:0 0 18px}
+
+  /* ---------- triad cards ---------- */
+  .triads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  .grouplabel{font-family:"Fraunces",serif;font-weight:600;font-size:20px;color:var(--copper);
+    margin:22px 0 2px;text-align:center;letter-spacing:.02em}
+  .tcard{background:linear-gradient(180deg,#f6efe1,var(--parch-2));border-radius:14px;
+    padding:14px 8px 12px;text-align:center;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+  .tcard .t-name{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--copper);font-weight:700}
+  .tcard .t-name .inv{display:block;margin-top:2px;font-size:8.5px;letter-spacing:.06em;
+    text-transform:none;font-weight:400;color:var(--ink-soft)}
+  .tcard svg{margin:6px auto 0;display:block;max-width:100%;height:auto}
+
+  footer{text-align:center;margin-top:60px;color:#8c7e68;font-size:13px;
+    font-family:"Space Mono",monospace;letter-spacing:.06em}
+  footer a{color:var(--brass)}
+
+  @media(max-width:560px){
+    .triads{grid-template-columns:1fr 1fr}
+    .swipe-hint{display:block}
+    .controls{gap:10px;padding:14px 12px}
+    header{padding:30px 0 16px}
+    h1{font-size:clamp(34px,11vw,52px)}
+    .sub{font-size:15px}
+    .panel{padding:16px 4px 8px}
+    .panel-head{padding:0 12px 10px}
+    .np{width:44px;height:44px;font-size:16px}
+    .fb-row{padding:0 4px}
+    .navpad{gap:9px}
+    .pedal{max-width:86%}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  /* ---------- print bar ---------- */
+  .printbar{display:flex;gap:10px;align-items:center;justify-content:center;
+    margin:2px 0 0;font-family:"Space Mono",monospace;font-size:12px}
+  .printbar span{letter-spacing:.14em;text-transform:uppercase;color:var(--brass);opacity:.9}
+  .printbar button{appearance:none;border:1px solid rgba(201,138,47,.5);background:rgba(0,0,0,.2);
+    color:var(--parch);font-family:"Public Sans";font-weight:700;font-size:14px;
+    padding:9px 16px;border-radius:10px;cursor:pointer;transition:.15s}
+  .printbar button:hover{background:var(--brass);color:#1c130b}
+  .printbar button:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px}
+
+  /* ---------- print ---------- */
+  @media print{
+    body{background:#fff!important;color:#1c130b;padding:0 4mm}
+    .no-print,.controls,.printbar,.swipe-hint,footer{display:none!important}
+    header{padding:4mm 0 3mm}
+    h1,.sub,h2,.lead,.note-box{color:#1c130b!important}
+    h1 em{color:#9a5a12!important}
+    .sub b{color:#1c130b!important}
+    .note-box{background:#f3ece0;border-color:#c98a2f}
+    .panel{box-shadow:none;border:1px solid #d8cdb6;break-inside:avoid;margin:6px 0}
+    .scroller{overflow:visible}
+    .scroller svg{width:100%!important;height:auto}
+    .tcard{box-shadow:none;border:1px solid #e0d5bf;break-inside:avoid}
+    h2{break-after:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Triaden × Pentatonik</p>
+    <h1>Der Dreiklang<br><em>wohnt</em> in der Skala</h1>
+    <p class="sub">Jede Pentatonik ist nur ein <b>Dreiklang plus zwei Töne</b>.
+      Färb die Akkordtöne ein – und die Chord-Shapes aus den Umkehrungen
+      leuchten direkt im Griffbrett auf.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="root">Grundton</label>
+      <select id="root" aria-label="Grundton wählen"></select>
+    </div>
+    <div class="ctl">
+      <label>Skala</label>
+      <div class="seg" id="type" role="group" aria-label="Skalentyp">
+        <button data-type="minor" aria-pressed="true">Moll-Penta.</button>
+        <button data-type="major" aria-pressed="false">Dur-Penta.</button>
+      </div>
+    </div>
+    <div class="ctl" hidden style="display:none">
+      <label for="pos">Position</label>
+      <select id="pos" aria-label="Position / Lage"></select>
+    </div>
+    <div class="ctl">
+      <label>Beschriftung</label>
+      <div class="seg" id="label" role="group" aria-label="Punkt-Beschriftung">
+        <button data-label="interval" aria-pressed="false">Intervalle</button>
+        <button data-label="note" aria-pressed="false">Töne</button>
+        <button data-label="none" aria-pressed="true">Aus</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="triads">Dreiklänge</label>
+      <select id="triads" aria-label="Welcher Dreiklang in der Position">
+        <option value="all" selected>Ganze Skala</option>
+        <option value="1">Dreiklang 1</option>
+        <option value="2">Dreiklang 2</option>
+        <option value="3">Dreiklang 3</option>
+        <option value="4">Dreiklang 4</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label>Grundton</label>
+      <div class="seg" id="roothl" role="group" aria-label="Grundton hervorheben">
+        <button data-root="on" aria-pressed="false">Betont</button>
+        <button data-root="off" aria-pressed="true">Einfarbig</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="chordColor">Akkord-Farbe</label>
+      <input type="color" id="chordColor" value="#c98a2f" aria-label="Farbe der Dreiklänge">
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="name" id="scaleName">A-Moll-Pentatonik</div>
+      <div class="formula" id="scaleFormula">1 · ♭3 · 4 · 5 · ♭7</div>
+    </div>
+    <div class="chord-name" id="triadChord"><strong>Am</strong> <span class="fn">— Stufe i · Tonika</span></div>
+    <div class="triad-info" id="triadInfo"><span class="chip"><span class="badge" style="background:#c98a2f;color:#fff">1</span><strong>Am/C</strong> <small>· 1. Umkehrung · C·E·A</small></span></div>
+    <div class="fb-row">
+      <div class="scroller" id="neckScroll"><svg viewBox="0 0 266 242" width="266" height="242" role="img" aria-label="A Moll-Pentatonik Griffbrett"><defs>
+    <linearGradient id="ebony" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b5038"/><stop offset=".5" stop-color="#4c3422"/><stop offset="1" stop-color="#382415"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.26" numOctaves="5" seed="8" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.27  0 0 0 0 0.17  0 0 0 0 0.10  0 0 0 1.15 -0.42"/>
+    </filter>
+    <filter id="grain2" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.66" numOctaves="6" seed="23" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 1.35 -0.66"/>
+    </filter>
+    <linearGradient id="fretwire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#36383c"/><stop offset=".20" stop-color="#9ea1a7"/>
+      <stop offset=".40" stop-color="#ffffff"/><stop offset=".52" stop-color="#d6d9de"/>
+      <stop offset=".72" stop-color="#83858a"/><stop offset="1" stop-color="#303135"/>
+    </linearGradient>
+    <linearGradient id="fretSheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".6"/><stop offset=".15" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".85" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".42"/>
+    </linearGradient>
+    <radialGradient id="pearl" cx=".4" cy=".34" r=".85">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#eef2ef"/><stop offset=".64" stop-color="#d9e2ec"/><stop offset=".84" stop-color="#ecdcec"/><stop offset="1" stop-color="#c0c6cf"/>
+    </radialGradient>
+    <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#fbad3b" flood-opacity=".7"/>
+    </filter>
+    <filter id="bsh" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.42"/>
+    </filter>
+  </defs><rect x="36" y="14" width="216" height="202" rx="5" fill="url(#ebony)" filter="url(#bsh)"/><rect x="36" y="14" width="216" height="202" rx="5" filter="url(#grain)"/><rect x="36" y="14" width="216" height="202" rx="5" filter="url(#grain2)" opacity="0.85"/><rect x="36" y="14" width="216" height="84.8" rx="5" fill="#ffffff" opacity="0.05"/><circle cx="65.38240273899059" cy="115" r="7.5" fill="url(#pearl)" stroke="#090605" stroke-opacity=".4" stroke-width="1"/><circle cx="63.4" cy="112.5" r="2" fill="#fff" opacity=".65"/><circle cx="176.408140794434" cy="115" r="7.5" fill="url(#pearl)" stroke="#090605" stroke-opacity=".4" stroke-width="1"/><circle cx="174.4" cy="112.5" r="2" fill="#fff" opacity=".65"/><rect x="35.4" y="15" width="4.2" height="202" rx="2" fill="#0c0805" opacity=".4"/><rect x="33.9" y="14" width="4.2" height="202" rx="2" fill="url(#fretwire)"/><rect x="35.5" y="14" width="0.9" height="202" fill="#ffffff" opacity=".7"/><rect x="33.9" y="14" width="4.2" height="202" rx="2" fill="url(#fretSheen)"/><rect x="94.2" y="15" width="4.2" height="202" rx="2" fill="#0c0805" opacity=".4"/><rect x="92.7" y="14" width="4.2" height="202" rx="2" fill="url(#fretwire)"/><rect x="94.3" y="14" width="0.9" height="202" fill="#ffffff" opacity=".7"/><rect x="92.7" y="14" width="4.2" height="202" rx="2" fill="url(#fretSheen)"/><text x="65.38240273899059" y="232" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" fill="#9b8a70">5</text><rect x="149.6" y="15" width="4.2" height="202" rx="2" fill="#0c0805" opacity=".4"/><rect x="148.1" y="14" width="4.2" height="202" rx="2" fill="url(#fretwire)"/><rect x="149.8" y="14" width="0.9" height="202" fill="#ffffff" opacity=".7"/><rect x="148.1" y="14" width="4.2" height="202" rx="2" fill="url(#fretSheen)"/><text x="122.49810066818266" y="232" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" fill="#9b8a70">6</text><rect x="202.0" y="15" width="4.2" height="202" rx="2" fill="#0c0805" opacity=".4"/><rect x="200.5" y="14" width="4.2" height="202" rx="2" fill="url(#fretwire)"/><rect x="202.1" y="14" width="0.9" height="202" fill="#ffffff" opacity=".7"/><rect x="200.5" y="14" width="4.2" height="202" rx="2" fill="url(#fretSheen)"/><text x="176.408140794434" y="232" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" fill="#9b8a70">7</text><rect x="251.4" y="15" width="4.2" height="202" rx="2" fill="#0c0805" opacity=".4"/><rect x="249.9" y="14" width="4.2" height="202" rx="2" fill="url(#fretwire)"/><rect x="251.6" y="14" width="0.9" height="202" fill="#ffffff" opacity=".7"/><rect x="249.9" y="14" width="4.2" height="202" rx="2" fill="url(#fretSheen)"/><text x="227.29244286524192" y="232" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" fill="#9b8a70">8</text><line x1="36" y1="211.6" x2="252" y2="211.6" stroke="#000000" stroke-opacity=".3" stroke-width="3.6"/><line x1="36" y1="210" x2="252" y2="210" stroke="#bd9c5e" stroke-width="3.6"/><line x1="36" y1="209.2" x2="252" y2="209.2" stroke="#efd9a6" stroke-width="1.22" stroke-opacity=".85"/><text x="20" y="214" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">E</text><line x1="36" y1="173.3" x2="252" y2="173.3" stroke="#000000" stroke-opacity=".3" stroke-width="2.81"/><line x1="36" y1="172" x2="252" y2="172" stroke="#bd9c5e" stroke-width="2.81"/><line x1="36" y1="171.4" x2="252" y2="171.4" stroke="#efd9a6" stroke-width="0.96" stroke-opacity=".85"/><text x="20" y="176" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">A</text><line x1="36" y1="135.0" x2="252" y2="135.0" stroke="#000000" stroke-opacity=".3" stroke-width="2.16"/><line x1="36" y1="134" x2="252" y2="134" stroke="#bd9c5e" stroke-width="2.16"/><line x1="36" y1="133.5" x2="252" y2="133.5" stroke="#efd9a6" stroke-width="0.73" stroke-opacity=".85"/><text x="20" y="138" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">D</text><line x1="36" y1="96.8" x2="252" y2="96.8" stroke="#000000" stroke-opacity=".3" stroke-width="1.7"/><line x1="36" y1="96" x2="252" y2="96" stroke="#bd9c5e" stroke-width="1.7"/><line x1="36" y1="95.6" x2="252" y2="95.6" stroke="#efd9a6" stroke-width="0.58" stroke-opacity=".85"/><text x="20" y="100" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">G</text><line x1="36" y1="58.5" x2="252" y2="58.5" stroke="#000000" stroke-opacity=".3" stroke-width="1.11"/><line x1="36" y1="58" x2="252" y2="58" stroke="#cfd3d8" stroke-width="1.11"/><line x1="36" y1="57.8" x2="252" y2="57.8" stroke="#f4f6f8" stroke-width="0.50" stroke-opacity=".85"/><text x="20" y="62" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">B</text><line x1="36" y1="20.4" x2="252" y2="20.4" stroke="#000000" stroke-opacity=".3" stroke-width="0.85"/><line x1="36" y1="20" x2="252" y2="20" stroke="#cfd3d8" stroke-width="0.85"/><line x1="36" y1="19.8" x2="252" y2="19.8" stroke="#f4f6f8" stroke-width="0.50" stroke-opacity=".85"/><text x="20" y="24" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">e</text><g>
+        <circle cx="65.38240273899059" cy="210" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="227.29244286524192" cy="210" r="14.0" fill="#c98a2f"
+           filter="url(#g)"/>
+        </g><g>
+        <circle cx="65.38240273899059" cy="172" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="176.408140794434" cy="172" r="14.0" fill="#c98a2f"
+           filter="url(#g)"/>
+        </g><g>
+        <circle cx="65.38240273899059" cy="134" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="176.408140794434" cy="134" r="14.0" fill="#c98a2f"
+           filter="url(#g)"/>
+        </g><g>
+        <circle cx="65.38240273899059" cy="96" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="176.408140794434" cy="96" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="65.38240273899059" cy="58" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="227.29244286524192" cy="58" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="65.38240273899059" cy="20" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g><g>
+        <circle cx="227.29244286524192" cy="20" r="14.0" fill="#efe7d6"
+          stroke="#c98a2f" stroke-width="2.3" />
+        </g></svg></div>
+    </div>
+    <p class="swipe-hint" id="swipeHint">← seitlich wischen für den ganzen Hals →</p>
+    <div class="navwrap no-print">
+      <div class="pedal">
+        <i class="hinge" aria-hidden="true"></i>
+        <div class="navpad" role="group" aria-label="Navigation">
+          <button class="np up"    id="npUp"    aria-label="Mehr Dreiklänge"><span class="g">▲</span></button>
+          <button class="np left"  id="npLeft"  aria-label="Position tiefer"><span class="g">◀</span></button>
+          <span   class="np center"><b id="npPos">Lage 1</b><i id="npTri">5–8 · △1</i></span>
+          <button class="np right" id="npRight" aria-label="Position höher"><span class="g">▶</span></button>
+          <button class="np down"  id="npDown"  aria-label="Weniger Dreiklänge"><span class="g">▼</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="printbar no-print">
+    <span>Drucken / PDF</span>
+    <button id="pA4">DIN A4</button>
+    <button id="pA3">DIN A3</button>
+  </div>
+
+  <h2><span class="num">↺</span>Die Chord-Shapes</h2>
+  <h3 class="grouplabel">Moll</h3>
+  <div id="triadMinor" class="triads"></div>
+  <h3 class="grouplabel">Dur</h3>
+  <div id="triadMajor" class="triads"></div>
+
+  <footer>
+    Gebaut nach „Chord Inversions" · <a href="https://stuff.music.blog/2018/12/10/chord-inversions/">stuff.music.blog</a>
+  </footer>
+</div>
+
+<script>
+const NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const OPEN=[4,9,2,7,11,4];            // low E .. high e  (string 0 = low E)
+const STRING_LBL=["E","A","D","G","B","e"];
+const SCALES={
+  minor:{name:"Moll-Pentatonik",offs:[0,3,5,7,10],chord:[0,3,7],
+         lbl:{0:"1",3:"♭3",5:"4",7:"5",10:"♭7"},formula:"1 · ♭3 · 4 · 5 · ♭7"},
+  major:{name:"Dur-Pentatonik",offs:[0,2,4,7,9],chord:[0,4,7],
+         lbl:{0:"1",2:"2",4:"3",7:"5",9:"6"},formula:"1 · 2 · 3 · 5 · 6"}
+};
+const FRETS=15, MARK=[3,5,7,9,15], DBL=12;
+const MIDI=[40,45,50,55,59,64];   // open-string pitches low E .. high e
+
+let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f"};
+
+/* color helpers */
+function textOn(hex){const h=hex.replace('#','');const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  return (0.299*r+0.587*g+0.114*b)>150?'#231a10':'#fff';}
+function shade(hex,f){const h=hex.replace('#','');let r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
+  const c=v=>Math.max(0,Math.min(255,Math.round(v*f))).toString(16).padStart(2,'0');return '#'+c(r)+c(g)+c(b);}
+/* inversion name + slash-chord name from the bass (lowest-pitch) note */
+function bassNote(notes){return notes.reduce((a,n)=>{const m=MIDI[n.s]+n.f;return m<a.m?{m,s:n.s,f:n.f}:a;},{m:1e9});}
+function invName(notes){
+  const b=bassNote(notes), iv=((OPEN[b.s]+b.f)-state.root+1200)%12;
+  return iv===0?"Grundstellung":(iv===3||iv===4)?"1. Umkehrung":"2. Umkehrung";
+}
+function slashName(notes){
+  const b=bassNote(notes), bpc=(OPEN[b.s]+b.f)%12, ci=chordInfo();
+  return ci.tonic.name + (bpc===state.root ? "" : "/"+NAMES[bpc]);
+}
+/* the three tones of the triad, ordered low -> high in pitch */
+function triadTones(notes){
+  return notes.slice().sort((a,b)=>(MIDI[a.s]+a.f)-(MIDI[b.s]+b.f))
+    .map(n=>NAMES[(OPEN[n.s]+n.f)%12]).join("·");
+}
+
+/* ---------- find triad shapes (3 chord-tones on 3 adjacent strings) ---------- */
+/* the 5 typical pentatonic positions ("boxes"), anchored to the root.
+   Returned in box order (Lage 1 = root box). Wrapped so each 4-fret
+   window sits on the drawn neck. */
+/* per-string base degree of position 1 — a fixed property of standard tuning */
+const BASE_STARTS=[0,2,4,1,3,0];
+/* the actual fret span of pentatonic position p (lowest..highest note over all 6 strings) */
+function boxWindow(p){
+  const offs=state.type==="minor"?[0,3,5,7,10]:[0,2,4,7,9];
+  const e6=((state.root-4)%12+12)%12, base=e6+offs[p];
+  let lo=Infinity,hi=-Infinity;
+  for(let s=0;s<6;s++){
+    const d0=(BASE_STARTS[s]+p)%5, d1=(d0+1)%5;
+    [d0,d1].forEach(d=>{
+      const pc=(state.root+offs[d])%12;
+      let f=((pc-OPEN[s])%12+12)%12; while(f<base-2) f+=12;
+      lo=Math.min(lo,f); hi=Math.max(hi,f);
+    });
+  }
+  while(hi>FRETS){lo-=12;hi-=12;}   // keep the box on the drawn neck
+  while(lo<0){lo+=12;hi+=12;}
+  return {lo,hi};
+}
+function currentWindow(){
+  if(state.pos==="all") return {lo:0,hi:FRETS};
+  return boxWindow(Math.min(+state.pos,4));
+}
+
+function getTriads(){
+  const sc=SCALES[state.type], root=state.root;
+  const {lo,hi}=currentWindow();
+  const chordPC=sc.chord.map(o=>(root+o)%12);
+  const cand=s=>{let a=[];for(let f=lo;f<=hi;f++){const pc=(OPEN[s]+f)%12;if(chordPC.includes(pc))a.push({f,pc});}return a;};
+  const shapes=[];
+  for(let a=0;a<=3;a++){                      // string sets low->high
+    const c=[cand(a),cand(a+1),cand(a+2)];
+    if(c.some(x=>x.length===0)) continue;
+    let best=null;
+    for(const n0 of c[0])for(const n1 of c[1])for(const n2 of c[2]){
+      if(new Set([n0.pc,n1.pc,n2.pc]).size!==3) continue; // must be a full triad
+      const fr=[n0.f,n1.f,n2.f], span=Math.max(...fr)-Math.min(...fr);
+      if(!best||span<best.span) best={span,notes:[{s:a,f:n0.f},{s:a+1,f:n1.f},{s:a+2,f:n2.f}]};
+    }
+    if(best) shapes.push(best.notes);
+  }
+  return shapes;
+}
+
+/* harmonic identity of the triad(s) inside the pentatonic */
+function chordInfo(){
+  const r=state.root;
+  if(state.type==="minor") return {
+    tonic:{name:NAMES[r]+"m", deg:"i",   fn:"Tonika"},
+    rel:  {name:NAMES[(r+3)%12], deg:"♭III", fn:"Tonikaparallele (rel. Dur)"}};
+  return {
+    tonic:{name:NAMES[r], deg:"I", fn:"Tonika"},
+    rel:  {name:NAMES[(r+9)%12]+"m", deg:"vi", fn:"Tonikaparallele (rel. Moll)"}};
+}
+
+/* ---------- build neck SVG (compact box, or full neck for "Ganzer Hals") ---------- */
+function neckSVG(){
+  const sc=SCALES[state.type], root=state.root;
+  const {lo,hi}=currentWindow();
+  const FULL = state.pos==="all";
+  const openCol = FULL || lo===0;
+  const dMin = FULL?0:(lo===0?0:lo-1);   // leftmost line (gives fret-lo notes a cell)
+  const dMax = FULL?FRETS:hi;
+  const nCells=dMax-dMin;
+  const cellW=54, padL=22, padR=14, padT=20, rowH=38, padB=32;
+  const openW=openCol?40:14;
+  const nutX=padL+openW;
+  const W=nutX+nCells*cellW+padR;
+  const H=padT+5*rowH+padB;
+  const yOf=s=>padT+(5-s)*rowH;                 // string 0 (low E) at bottom
+  // realistic fret spacing — "rule of 17.817" (frets narrow toward the body, Martin 25.4" scale);
+  // each window is normalised to a comfortable width, so the taper within a Lage is true to life
+  const usable=nCells*cellW;
+  const dph=f=>1-Math.pow(2,-f/12);             // fraction of scale length from nut to fret f
+  const _x0=dph(dMin), _span=(dph(dMax)-_x0)||1;
+  const lineX=f=>nutX+((dph(f)-_x0)/_span)*usable;
+  const fx=f=>(lineX(Math.max(dMin,f-1))+lineX(f))/2;   // note sits in the cell behind fret f
+  let minCell=Infinity; for(let f=dMin+1;f<=dMax;f++) minCell=Math.min(minCell,lineX(f)-lineX(f-1));
+  const R=Math.max(9,Math.min(14,(isFinite(minCell)?minCell:cellW)*0.46));
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${NAMES[root]} ${sc.name} Griffbrett">`;
+  // ---- defs: ebony wood, grain, silver fretwire, pearl inlay, glow ----
+  svg+=`<defs>
+    <linearGradient id="ebony" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b5038"/><stop offset=".5" stop-color="#4c3422"/><stop offset="1" stop-color="#382415"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.26" numOctaves="5" seed="8" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.27  0 0 0 0 0.17  0 0 0 0 0.10  0 0 0 1.15 -0.42"/>
+    </filter>
+    <filter id="grain2" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02 0.66" numOctaves="6" seed="23" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 1.35 -0.66"/>
+    </filter>
+    <linearGradient id="fretwire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#36383c"/><stop offset=".20" stop-color="#9ea1a7"/>
+      <stop offset=".40" stop-color="#ffffff"/><stop offset=".52" stop-color="#d6d9de"/>
+      <stop offset=".72" stop-color="#83858a"/><stop offset="1" stop-color="#303135"/>
+    </linearGradient>
+    <linearGradient id="fretSheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".6"/><stop offset=".15" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset=".85" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity=".42"/>
+    </linearGradient>
+    <radialGradient id="pearl" cx=".4" cy=".34" r=".85">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#eef2ef"/><stop offset=".64" stop-color="#d9e2ec"/><stop offset=".84" stop-color="#ecdcec"/><stop offset="1" stop-color="#c0c6cf"/>
+    </radialGradient>
+    <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="${shade(state.chordColor,1.25)}" flood-opacity=".7"/>
+    </filter>
+    <filter id="bsh" x="-25%" y="-25%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.42"/>
+    </filter>
+  </defs>`;
+  const bx=nutX, bw=nCells*cellW, byo=padT-6, bh=5*rowH+12;
+  svg+=`<rect x="${bx}" y="${byo}" width="${bw}" height="${bh}" rx="5" fill="url(#ebony)" filter="url(#bsh)"/>`;
+  svg+=`<rect x="${bx}" y="${byo}" width="${bw}" height="${bh}" rx="5" filter="url(#grain)"/>`;
+  svg+=`<rect x="${bx}" y="${byo}" width="${bw}" height="${bh}" rx="5" filter="url(#grain2)" opacity="0.85"/>`;
+  svg+=`<rect x="${bx}" y="${byo}" width="${bw}" height="${(bh*0.42).toFixed(1)}" rx="5" fill="#ffffff" opacity="0.05"/>`;
+  // ---- pearl inlays ----
+  const midY=padT+2.5*rowH;
+  const inlay=(cx,cy)=>`<circle cx="${cx}" cy="${cy}" r="7.5" fill="url(#pearl)" stroke="#090605" stroke-opacity=".4" stroke-width="1"/><circle cx="${(cx-2).toFixed(1)}" cy="${(cy-2.5).toFixed(1)}" r="2" fill="#fff" opacity=".65"/>`;
+  MARK.forEach(m=>{ if(m>dMin&&m<=dMax) svg+=inlay(fx(m),midY);});
+  if(DBL>dMin&&DBL<=dMax){svg+=inlay(fx(DBL),padT+1.3*rowH)+inlay(fx(DBL),padT+3.7*rowH);}
+  // ---- frets: depth shadow + metallic crown + specular shimmer (plasticity) ----
+  const fw=4.2;
+  for(let f=dMin;f<=dMax;f++){
+    const x=lineX(f), isNut=(f===0);
+    if(isNut){
+      svg+=`<rect x="${(x-3).toFixed(1)}" y="${byo}" width="6" height="${bh}" rx="2" fill="#e8dcc2"/>`;
+      svg+=`<rect x="${(x-3).toFixed(1)}" y="${byo}" width="2" height="${bh}" fill="#fff" opacity=".5"/>`;
+    } else {
+      svg+=`<rect x="${(x-fw/2+1.5).toFixed(1)}" y="${byo+1}" width="${fw}" height="${bh}" rx="2" fill="#0c0805" opacity=".4"/>`;     // cast shadow (proud fret)
+      svg+=`<rect x="${(x-fw/2).toFixed(1)}" y="${byo}" width="${fw}" height="${bh}" rx="2" fill="url(#fretwire)"/>`;                 // rounded metal crown
+      svg+=`<rect x="${(x-0.45).toFixed(1)}" y="${byo}" width="0.9" height="${bh}" fill="#ffffff" opacity=".7"/>`;                   // specular shimmer line
+      svg+=`<rect x="${(x-fw/2).toFixed(1)}" y="${byo}" width="${fw}" height="${bh}" rx="2" fill="url(#fretSheen)"/>`;               // top-lit length sheen
+    }
+    if(f>dMin) svg+=`<text x="${fx(f)}" y="${H-10}" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" fill="#9b8a70">${f}</text>`;
+  }
+  // ---- strings: Martin Light gauges (.012-.054); wound = phosphor-bronze gold, plain = steel ----
+  const GA=[0.054,0.042,0.032,0.025,0.016,0.012];   // s0 low E -> s5 high e
+  const WOUND=[true,true,true,true,false,false];     // E A D G wound · B e plain
+  const swOf=g=>0.85+(g-0.012)/(0.054-0.012)*2.75;   // map gauge -> stroke px (~0.85..3.6)
+  for(let s=0;s<6;s++){
+    const y=yOf(s), sw=+swOf(GA[s]).toFixed(2);
+    const base=WOUND[s]?"#bd9c5e":"#cfd3d8", hi=WOUND[s]?"#efd9a6":"#f4f6f8";
+    svg+=`<line x1="${bx}" y1="${(y+sw*0.45).toFixed(1)}" x2="${bx+bw}" y2="${(y+sw*0.45).toFixed(1)}" stroke="#000000" stroke-opacity=".3" stroke-width="${sw}"/>`; // under-shadow
+    svg+=`<line x1="${bx}" y1="${y}" x2="${bx+bw}" y2="${y}" stroke="${base}" stroke-width="${sw}"/>`;                                                              // body
+    svg+=`<line x1="${bx}" y1="${(y-sw*0.22).toFixed(1)}" x2="${bx+bw}" y2="${(y-sw*0.22).toFixed(1)}" stroke="${hi}" stroke-width="${Math.max(0.5,sw*0.34).toFixed(2)}" stroke-opacity=".85"/>`; // shimmer
+    svg+=`<text x="${padL-2}" y="${y+4}" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">${STRING_LBL[s]}</text>`;
+  }
+  // ---- notes (only the currently selected triad) ----
+  const triadMode=state.triads!=="all";
+  let allow=null;
+  if(triadMode){
+    const shapes=getTriads(); const idx=Math.min(+state.triads-1, shapes.length-1);
+    allow=new Set(); if(idx>=0&&shapes[idx]) shapes[idx].forEach(n=>allow.add(n.s+"_"+n.f));
+  }
+  for(let s=0;s<6;s++){
+    for(let f=dMin;f<=dMax;f++){
+      const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
+      if(!sc.offs.includes(iv)) continue;
+      if(state.pos!=="all" && (f<lo||f>hi)) continue;        // Nachbar-Lagen ausblenden
+      const isRoot=iv===0, isChord=sc.chord.includes(iv);
+      const hot   = triadMode ? allow.has(s+"_"+f) : isChord;
+      const rootHi= isRoot && state.showRoot && (triadMode ? allow.has(s+"_"+f) : true);
+      const x = (f===0&&openCol) ? padL+openW*0.5 : fx(f);
+      const y = yOf(s), r=R;
+      const CC=state.chordColor;
+      let fill,stroke="none",txt;
+      if(rootHi){fill="#b5531d";txt="#fff";}
+      else if(hot){fill=CC;txt=textOn(CC);}
+      else{fill="#efe7d6";stroke=CC;txt=shade(CC,.6);}
+      const glow = (hot||rootHi) ? `filter="url(#g)"` : "";
+      const lab = state.label==="note" ? NAMES[pc] : state.label==="none" ? "" : sc.lbl[iv];
+      const fs = lab.length>1?Math.max(8,Math.round(r*0.82)):Math.max(9,Math.round(r*0.92));
+      svg+=`<g>
+        <circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${fill}"
+          ${stroke!=="none"?`stroke="${stroke}" stroke-width="2.3"`:""} ${glow}/>
+        ${lab?`<text x="${x}" y="${(y+fs*0.35).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace"
+          font-size="${fs}" font-weight="700" fill="${txt}">${lab}</text>`:""}</g>`;
+    }
+  }
+  svg+=`</svg>`;
+  return svg;
+}
+
+/* ---------- chord-grip diagram on a full 6-string mini neck ---------- */
+const IVLBL={0:"1",1:"♭2",2:"2",3:"♭3",4:"3",5:"4",6:"♭5",7:"5",8:"♭6",9:"6",10:"♭7",11:"7"};
+function triadCard(shape,uid){
+  const F=shape.frets, root=shape.root;            // F: [E,A,D,G,B,e] fret | 0 open | null muted
+  const fretted=F.filter(f=>f!==null&&f>0);
+  const minF=fretted.length?Math.min(...fretted):0, maxF=fretted.length?Math.max(...fretted):0;
+  const movable=maxF>4;
+  const startFret=movable?minF-1:0;
+  const rows=4, cols=6, cw=20, rh=28, em=7;
+  const padL=26, padR=16, padTop=24, padBot=18;
+  const W=padL+padR+(cols-1)*cw, H=padTop+rows*rh+padBot;
+  const sx=i=>padL+i*cw, lineY=r=>padTop+r*rh, fy=fr=>padTop+(fr-startFret-0.5)*rh;
+  const bx0=sx(0)-em, bw=(cols-1)*cw+2*em, by0=padTop-6, bh=rows*rh+12, markY=by0-9;
+  const GA=[0.054,0.042,0.032,0.025,0.016,0.012], WOUND=[1,1,1,1,0,0];
+  const swOf=g=>0.7+(g-0.012)/(0.054-0.012)*2.1;
+  const inlay=(cx,cy)=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="url(#pl${uid})" stroke="#090605" stroke-opacity=".4" stroke-width=".8"/><circle cx="${(cx-1.4).toFixed(1)}" cy="${(cy-1.6).toFixed(1)}" r="1.3" fill="#fff" opacity=".65"/>`;
+  const CC=state.chordColor;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${shape.title}">`;
+  s+=`<defs>
+    <linearGradient id="eb${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b5038"/><stop offset=".5" stop-color="#4c3422"/><stop offset="1" stop-color="#382415"/></linearGradient>
+    <filter id="gr${uid}" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.26 0.013" numOctaves="5" seed="8" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.27  0 0 0 0 0.17  0 0 0 0 0.10  0 0 0 1.2 -0.46"/></filter>
+    <filter id="gr2${uid}" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.62 0.02" numOctaves="6" seed="23" stitchTiles="stitch" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0 0.04  0 0 0 1.4 -0.7"/></filter>
+    <linearGradient id="fw${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#36383c"/><stop offset=".2" stop-color="#9ea1a7"/><stop offset=".4" stop-color="#ffffff"/><stop offset=".52" stop-color="#d6d9de"/><stop offset=".72" stop-color="#83858a"/><stop offset="1" stop-color="#303135"/></linearGradient>
+    <radialGradient id="pl${uid}" cx=".4" cy=".34" r=".85">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".4" stop-color="#eef2ef"/><stop offset=".66" stop-color="#d9e2ec"/><stop offset=".85" stop-color="#ecdcec"/><stop offset="1" stop-color="#c0c6cf"/></radialGradient>
+    <filter id="tg${uid}" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="${shade(CC,1.25)}" flood-opacity=".6"/></filter>
+    <filter id="bs${uid}" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.42"/></filter>
+  </defs>`;
+  s+=`<rect x="${bx0}" y="${by0}" width="${bw}" height="${bh}" rx="5" fill="url(#eb${uid})" filter="url(#bs${uid})"/>`;
+  s+=`<rect x="${bx0}" y="${by0}" width="${bw}" height="${bh}" rx="5" filter="url(#gr${uid})"/>`;
+  s+=`<rect x="${bx0}" y="${by0}" width="${bw}" height="${bh}" rx="5" filter="url(#gr2${uid})" opacity="0.85"/>`;
+  s+=`<rect x="${bx0}" y="${by0}" width="${(bw*0.4).toFixed(1)}" height="${bh}" rx="5" fill="#ffffff" opacity="0.05"/>`;
+  const cxMid=padL+2.5*cw;
+  for(let f=startFret+1; f<=startFret+rows; f++){
+    if(f===12||f===24){ s+=inlay(cxMid-cw*0.7,fy(f))+inlay(cxMid+cw*0.7,fy(f)); }
+    else if(MARK.includes(f)){ s+=inlay(cxMid,fy(f)); }
+  }
+  for(let r=0;r<=rows;r++){
+    const y=lineY(r), isNut=(startFret===0&&r===0);
+    if(isNut) s+=`<rect x="${bx0}" y="${y-2.5}" width="${bw}" height="5" rx="2" fill="#e8dcc2"/>`;
+    else s+=`<rect x="${bx0}" y="${(y-1.5).toFixed(1)}" width="${bw}" height="3" fill="url(#fw${uid})"/>`;
+  }
+  for(let i=0;i<6;i++){
+    const x=sx(i), sw=+swOf(GA[i]).toFixed(2);
+    const base=WOUND[i]?"#bd9c5e":"#cfd3d8", hi=WOUND[i]?"#efd9a6":"#f4f6f8";
+    s+=`<line x1="${(x+sw*0.45).toFixed(1)}" y1="${by0}" x2="${(x+sw*0.45).toFixed(1)}" y2="${by0+bh}" stroke="#000" stroke-opacity=".3" stroke-width="${sw}"/>`;
+    s+=`<line x1="${x}" y1="${by0}" x2="${x}" y2="${by0+bh}" stroke="${base}" stroke-width="${sw}"/>`;
+    s+=`<line x1="${(x-sw*0.22).toFixed(1)}" y1="${by0}" x2="${(x-sw*0.22).toFixed(1)}" y2="${by0+bh}" stroke="${hi}" stroke-width="${Math.max(0.5,sw*0.34).toFixed(2)}" stroke-opacity=".85"/>`;
+  }
+  ["E","A","D","G","B","e"].forEach((n,i)=>
+    s+=`<text x="${sx(i)}" y="${H-3}" text-anchor="middle" font-family="Space Mono,monospace" font-size="9" font-weight="700" fill="#9b8a70">${n}</text>`);
+  if(movable)
+    s+=`<text x="${bx0-3}" y="${(fy(startFret+1)+3).toFixed(1)}" text-anchor="end" font-family="Space Mono,monospace" font-size="9" fill="#7a6b55">${startFret+1}fr</text>`;
+  // notes, open-string rings and muted ✕
+  for(let i=0;i<6;i++){
+    const f=F[i], x=sx(i);
+    if(f===null){ s+=`<text x="${x}" y="${markY+4}" text-anchor="middle" font-family="Space Mono,monospace" font-size="13" fill="#9b8a70">✕</text>`; continue; }
+    const pc=(OPEN[i]+f)%12, iv=(pc-root+12)%12, hot=(iv===0)&&state.showRoot;
+    const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":(IVLBL[iv]||"");
+    const fillCol=hot?'#b5531d':CC, txtCol=hot?'#fff':textOn(CC);
+    if(f===0){
+      s+=`<circle cx="${x}" cy="${markY}" r="6.5" fill="${fillCol}" filter="url(#tg${uid})"/>`;
+      if(lab) s+=`<text x="${x}" y="${(markY+3).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace" font-size="${lab.length>1?7.5:8.5}" font-weight="700" fill="${txtCol}">${lab}</text>`;
+    } else {
+      const cy=fy(f);
+      s+=`<circle cx="${x}" cy="${cy.toFixed(1)}" r="8.5" fill="${fillCol}" filter="url(#tg${uid})"/>`;
+      if(lab) s+=`<text x="${x}" y="${(cy+3.2).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace" font-size="${lab.length>1?8:9}" font-weight="700" fill="${txtCol}">${lab}</text>`;
+    }
+  }
+  s+=`</svg>`;
+  return s;
+}
+
+/* classic chord grips — minor & major (root pitch-class per shape) */
+const MIN_SHAPES=[
+  {title:"Am",           root:9, frets:[null,0,2,2,1,0]},
+  {title:"Em",           root:4, frets:[0,2,2,0,0,0]},
+  {title:"Dm",           root:2, frets:[null,null,0,2,3,1]},
+  {title:"Am · Barré 5", root:9, frets:[5,7,7,5,5,5]},
+  {title:"Am · G·B·e",   root:9, frets:[null,null,null,2,1,0]},
+  {title:"Am · G·B·e",   root:9, frets:[null,null,null,5,5,5]}
+];
+const MAJ_SHAPES=[
+  {title:"A",            root:9, frets:[null,0,2,2,2,0]},
+  {title:"E",            root:4, frets:[0,2,2,1,0,0]},
+  {title:"D",            root:2, frets:[null,null,0,2,3,2]},
+  {title:"G",            root:7, frets:[3,2,0,0,0,3]},
+  {title:"C",            root:0, frets:[null,3,2,0,1,0]},
+  {title:"A · Barré 5",  root:9, frets:[5,7,7,6,5,5]}
+];
+/* which inversion: derived from the lowest-sounding (bass) note */
+function chordInv(shape){
+  let lo=1e9, bpc=shape.root;
+  shape.frets.forEach((f,i)=>{ if(f!==null){ const m=MIDI[i]+f; if(m<lo){lo=m; bpc=(OPEN[i]+f)%12;} } });
+  const iv=(bpc-shape.root+12)%12;
+  return iv===0?"Grundstellung":(iv===3||iv===4)?"1. Umkehrung":(iv===7||iv===8)?"2. Umkehrung":"";
+}
+
+/* ---------- render ---------- */
+function render(){
+  const sc=SCALES[state.type];
+  document.getElementById("scaleName").innerHTML=`<b>${NAMES[state.root]}</b>-${sc.name}`;
+  document.getElementById("scaleFormula").textContent=sc.formula;
+  document.getElementById("neckScroll").innerHTML=neckSVG();
+  // recolor legend swatch
+  const ck=document.querySelector(".key.chord"), sk=document.querySelector(".key.scale");
+  if(ck) ck.style.background=state.chordColor;
+  if(sk) sk.style.borderColor=state.chordColor;
+  // chord / degree identity
+  const ci=chordInfo(), cn=document.getElementById("triadChord");
+  if(state.triads!=="all"){
+    cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
+      `<span class="fn">— Stufe ${ci.tonic.deg} · ${ci.tonic.fn}</span>`;
+  } else {
+    cn.innerHTML=`Enthaltene Akkorde: <strong>${ci.tonic.name}</strong> `+
+      `<span class="fn">(Stufe ${ci.tonic.deg}, ${ci.tonic.fn})</span>`+
+      `<span class="dot">·</span><strong>${ci.rel.name}</strong> `+
+      `<span class="fn">(Stufe ${ci.rel.deg}, ${ci.rel.fn})</span>`;
+  }
+  // triad names (inversions)
+  const ti=document.getElementById("triadInfo");
+  if(state.triads!=="all"){
+    const shapes=getTriads(), idx=Math.min(+state.triads-1,shapes.length-1), sh=shapes[idx];
+    const lage = state.pos==="all" ? "H" : (+state.pos+1);
+    ti.innerHTML = (idx>=0&&sh)
+      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${lage}</span><strong>${slashName(sh)}</strong> <small>· ${invName(sh)} · ${triadTones(sh)}</small></span>`
+      : "";
+  } else ti.innerHTML="";
+  // nav d-pad readout + bounds
+  {
+    const w=currentWindow();
+    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
+    document.getElementById("npPos").textContent = lage;
+    document.getElementById("npTri").textContent =
+      (state.pos==="all"?"":(w.lo+"–"+w.hi)) + (state.triads==="all" ? " · Skala" : " · △"+state.triads);
+  }
+  const sh=document.getElementById("swipeHint"); if(sh) sh.style.display = state.pos==="all" ? "" : "none";
+  document.getElementById("npLeft").disabled  = false;
+  document.getElementById("npRight").disabled = false;
+  document.getElementById("npDown").disabled  = TRI_ORDER.indexOf(state.triads)===0;
+  document.getElementById("npUp").disabled    = TRI_ORDER.indexOf(state.triads)===TRI_ORDER.length-1;
+}
+function renderTriads(){
+  document.getElementById("triadMinor").innerHTML=MIN_SHAPES.map((sh,i)=>
+    `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"m"+i)}</div>`).join("");
+  document.getElementById("triadMajor").innerHTML=MAJ_SHAPES.map((sh,i)=>
+    `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"M"+i)}</div>`).join("");
+}
+
+/* ---------- controls ---------- */
+const rootSel=document.getElementById("root");
+NAMES.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;if(i===9)o.selected=true;rootSel.appendChild(o);});
+const posSel=document.getElementById("pos");
+function fillPos(){
+  const prev=state.pos;
+  posSel.innerHTML="";
+  const all=document.createElement("option");all.value="all";all.textContent="Ganzer Hals";posSel.appendChild(all);
+  for(let i=0;i<5;i++){const w=boxWindow(i);const o=document.createElement("option");o.value=String(i);
+    o.textContent=`Lage ${i+1} · Bünde ${w.lo}–${w.hi}`;posSel.appendChild(o);}
+  posSel.value=prev;
+}
+fillPos();
+// sync controls with the default state
+posSel.value=state.pos;
+document.getElementById("triads").value=state.triads;
+rootSel.addEventListener("change",e=>{state.root=+e.target.value;fillPos();render();});
+posSel.addEventListener("change",e=>{state.pos=e.target.value;render();});
+document.querySelectorAll("#type button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#type button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); state.type=b.dataset.type; fillPos(); render();
+}));
+document.querySelectorAll("#label button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#label button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); state.label=b.dataset.label; render(); renderTriads();
+}));
+document.getElementById("triads").addEventListener("change",e=>{state.triads=e.target.value;render();});
+document.getElementById("chordColor").addEventListener("input",e=>{state.chordColor=e.target.value;render();renderTriads();});
+document.querySelectorAll("#roothl button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("#roothl button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); state.showRoot=b.dataset.root==="on"; render(); renderTriads();
+}));
+function printSize(sz){
+  let st=document.getElementById("pageStyle");
+  if(!st){st=document.createElement("style");st.id="pageStyle";document.head.appendChild(st);}
+  st.textContent="@page{size:"+sz+" landscape;margin:10mm}";
+  window.print();
+}
+document.getElementById("pA4").addEventListener("click",()=>printSize("A4"));
+document.getElementById("pA3").addEventListener("click",()=>printSize("A3"));
+
+/* ---------- d-pad navigation ---------- */
+const POS_ORDER=["0","1","2","3","4"];
+const TRI_ORDER=["all","1","2","3","4"];
+function stepPos(d){let i=POS_ORDER.indexOf(state.pos); if(i<0)i=0;
+  i=(i+d+POS_ORDER.length)%POS_ORDER.length;            // wrap through the 5 Lagen
+  state.pos=POS_ORDER[i]; posSel.value=state.pos; render();}
+function stepTri(d){let i=TRI_ORDER.indexOf(state.triads);i=Math.max(0,Math.min(TRI_ORDER.length-1,i+d));
+  state.triads=TRI_ORDER[i]; document.getElementById("triads").value=state.triads; render();}
+document.getElementById("npLeft").addEventListener("click",()=>stepPos(-1));
+document.getElementById("npRight").addEventListener("click",()=>stepPos(1));
+document.getElementById("npUp").addEventListener("click",()=>stepTri(1));
+document.getElementById("npDown").addEventListener("click",()=>stepTri(-1));
+document.addEventListener("keydown",e=>{
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  const k=e.key;
+  if(k==="ArrowLeft"){stepPos(-1);e.preventDefault();}
+  else if(k==="ArrowRight"){stepPos(1);e.preventDefault();}
+  else if(k==="ArrowUp"){stepTri(1);e.preventDefault();}
+  else if(k==="ArrowDown"){stepTri(-1);e.preventDefault();}
+});
+
+render(); renderTriads();
+</script>
+</body>
+</html>
