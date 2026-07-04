@@ -192,9 +192,9 @@
   .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px 6px}
   .scroller svg{display:block;margin:0 auto;height:auto}
   /* Einzel-Lage: auf die verfügbare Breite skalieren, aber nur moderat
-     vergrößern (sonst wird das gerasterte Holz/Glow unscharf). Auf breiten
-     Screens werden zusätzlich mehr Bünde gezeichnet (siehe neckPad() im JS),
-     daher wächst die Deckelung mit. */
+     vergrößern (sonst wird das gerasterte Holz/Glow unscharf). Die Bundzahl
+     ist je Screen konstant (siehe neckCells() im JS), daher bleibt das
+     Griffbrett beim Lagenwechsel immer gleich groß; die Deckelung wächst mit. */
   #neckScroll:not(.full) svg{width:100%;max-width:460px}
   @media(min-width:760px){ #neckScroll:not(.full) svg{max-width:680px} }
   @media(min-width:1100px){ #neckScroll:not(.full) svg{max-width:820px} }
@@ -589,12 +589,13 @@ function chordInfo(){
     rel:  {name:NAMES[(r+9)%12]+"m", deg:"vi", fn:"Tonikaparallele (rel. Moll)"}};
 }
 
-/* zusätzliche Kontext-Bünde je Seite, abhängig von der Fensterbreite */
-function neckPad(){
+/* KONSTANTE Bundanzahl je Bildschirmbreite -> Griffbrett immer gleich groß,
+   egal welche Lage. Die Lage wird in diesem festen Fenster zentriert. */
+function neckCells(){
   const w=window.innerWidth||0;
-  if(w>=1100) return 3;
-  if(w>=760)  return 2;
-  return 0;
+  if(w>=1100) return 11;
+  if(w>=760)  return 9;
+  return 6;
 }
 
 /* ---------- build neck SVG (compact box, or full neck for "Ganzer Hals") ---------- */
@@ -608,11 +609,18 @@ function neckSVG(){
   const {lo,hi}=currentWindow();
   const FULL = state.pos==="all";
   const openCol = FULL || lo===0;
-  // Kontext-Bünde je nach Bildschirmbreite: auf großen Screens links/rechts
-  // mehr vom Hals zeigen (die Töne bleiben in der Lage lo..hi, siehe unten).
-  const pad = FULL?0:neckPad();
-  const dMin = FULL?0:Math.max(0,(lo===0?0:lo-1)-pad);   // leftmost line (gives fret-lo notes a cell)
-  const dMax = FULL?FRETS:Math.min(FRETS,hi+pad);
+  // Festes Fenster mit konstanter Bundzahl -> immer gleich groß. Die Lage (lo..hi)
+  // wird zentriert; am Hals-Ende wird das Fenster verschoben, nicht beschnitten.
+  let dMin, dMax;
+  if(FULL){ dMin=0; dMax=FRETS; }
+  else {
+    const WIN=Math.min(FRETS, neckCells());
+    dMin=Math.round((lo+hi)/2 - WIN/2);
+    dMax=dMin+WIN;
+    if(dMin<0){ dMin=0; dMax=WIN; }
+    if(dMax>FRETS){ dMax=FRETS; dMin=FRETS-WIN; }
+    if(dMin<0) dMin=0;
+  }
   const nCells=dMax-dMin;
   const cellW=54, padL=22, padR=14, padT=20, rowH=38, padB=32;
   const openW=openCol?40:14;
