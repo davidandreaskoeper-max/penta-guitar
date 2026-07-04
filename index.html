@@ -80,10 +80,13 @@
 
   /* ---------- nav d-pad (centered under fretboard) ---------- */
   .fb-row{padding:0 8px}
-  .navwrap{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;
-    align-items:center;gap:18px 28px;padding:16px 0 2px}
+  /* Pedal fest in der Mitte (Spalte 2), Pillen rechts daneben (Spalte 3) –
+     die 1fr-Spalten links/rechts halten das Pedal exakt unter dem Griffbrett */
+  .navwrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    gap:0 26px;padding:16px 0 2px}
   /* ---- Tonart-Akkorde als Pillen neben dem Pedal ---- */
-  .chordwrap{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+  .chordwrap{grid-column:3;justify-self:start;align-self:center;
+    display:flex;flex-direction:column;gap:8px;align-items:stretch}
   .chordbar-title{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--brass);opacity:.9;text-align:center}
   .chordbar{display:flex;flex-direction:column;gap:7px}
@@ -99,12 +102,17 @@
   .cpill[aria-pressed="true"] .rn{color:#1c130b}
   .cpill:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px}
   @media(max-width:620px){
+    .navwrap{grid-template-columns:1fr;justify-items:center;gap:16px 0}
+    .pedal{grid-column:1}
+    .chordwrap{grid-column:1;justify-self:center}
     .chordbar{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:340px}
     .cpill{min-width:0;padding:6px 12px}
   }
-  /* real stomp-pedal enclosure, centred under the fretboard */
-  .pedal{position:relative;isolation:isolate;width:max-content;max-width:74%;margin:0 auto;
-    padding:44px 22px 104px;border-radius:14px;
+  /* Stomp-Pedal — FESTE Größe (Breite & Höhe), mittig unter dem Griffbrett */
+  .pedal{grid-column:2;justify-self:center;position:relative;isolation:isolate;
+    width:264px;max-width:100%;margin:0 auto;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    padding:24px 20px 16px;border-radius:14px;
     background:
       radial-gradient(circle at 13px 13px, #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
       radial-gradient(circle at calc(100% - 13px) 13px, #d8dadd 0 1.5px, #80858a 2px 3.1px, rgba(0,0,0,.6) 3.5px 4.6px, transparent 5px),
@@ -114,22 +122,34 @@
     border:1px solid #0a0b0c;
     box-shadow:0 20px 34px rgba(0,0,0,.5),0 7px 12px rgba(0,0,0,.45),
       inset 0 1px 0 rgba(255,255,255,.18),inset 0 -10px 24px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.045)}
-  /* big slanted tread plate — the foot-stomp face (BOSS hallmark) */
-  .pedal::before{content:"";position:absolute;left:10px;right:10px;bottom:11px;height:53%;z-index:0;pointer-events:none;
-    clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);
-    background:linear-gradient(180deg,#777b81 0%,#5d6167 26%,#4a4e54 62%,#3a3d42 100%);
-    box-shadow:inset 0 3px 0 rgba(255,255,255,.30),inset 0 -6px 13px rgba(0,0,0,.5);
-    border-radius:3px 3px 9px 9px}
-  /* dark seam above the tread plate (hinge gap) */
-  .pedal .hinge{position:absolute;left:18px;right:18px;bottom:calc(11px + 53%);height:4px;z-index:0;pointer-events:none;
-    background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.15));border-radius:2px}
-  /* status LED near the top */
-  .pedal::after{content:"";position:absolute;top:17px;left:50%;transform:translateX(-50%);
-    width:9px;height:9px;border-radius:50%;z-index:2;pointer-events:none;
+  /* status LED oben */
+  .pedal-led{width:9px;height:9px;border-radius:50%;flex:0 0 auto;
     background:radial-gradient(circle at 40% 35%, #ffe0ac, #ff8c1a 55%, #b04b00 100%);
     box-shadow:0 0 9px 2px rgba(255,140,26,.7),inset 0 0 2px rgba(255,255,255,.85)}
-  .navpad{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,auto);
-    grid-template-rows:repeat(3,auto);gap:9px;justify-content:center;align-items:center}
+  /* Bernstein-Display — feste Breite, genug Platz für den Text */
+  .np-screen{position:relative;overflow:hidden;box-sizing:border-box;z-index:1;
+    width:100%;min-height:56px;border-radius:7px;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;
+    padding:8px 12px;font-family:"Space Mono",monospace;line-height:1.2;color:#f0c489;
+    background:radial-gradient(120% 90% at 50% 18%, #2e2a22 0%, #1a1813 55%, #0f0d0a 100%);
+    border:1px solid #000;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 12px rgba(0,0,0,.9),
+      inset 0 0 18px rgba(245,165,70,.12),0 2px 4px rgba(0,0,0,.5),0 0 0 3px #15171a,0 0 0 4px #000}
+  .np-screen::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 22%, rgba(255,255,255,0) 42%)}
+  .np-screen b{position:relative;z-index:1;font-size:17px;color:#ffc06a;font-weight:700;
+    letter-spacing:.02em;text-shadow:0 0 8px rgba(255,170,70,.7);white-space:nowrap}
+  .np-screen i{position:relative;z-index:1;font-style:normal;font-size:10.5px;color:#c8aa7e;
+    text-shadow:0 0 6px rgba(255,170,70,.4);white-space:nowrap}
+  /* Button-Kreuz UNTER dem Display (Mitte leer) */
+  .navpad{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,40px);
+    grid-template-rows:repeat(3,40px);gap:8px;justify-content:center;align-items:center}
+  /* geneigte Tread-Plate (Fuß-Trittfläche) am unteren Ende */
+  .pedal-tread{width:calc(100% + 6px);height:54px;margin-top:2px;flex:0 0 auto;pointer-events:none;
+    clip-path:polygon(7% 0,93% 0,100% 100%,0 100%);
+    background:linear-gradient(180deg,#777b81 0%,#5d6167 42%,#3a3d42 100%);
+    box-shadow:inset 0 3px 0 rgba(255,255,255,.30),inset 0 -6px 13px rgba(0,0,0,.5);
+    border-radius:3px 3px 9px 9px}
   /* chrome hex-nut stomp footswitch (Treter): faceted hex collar + polished chrome dome */
   .np{appearance:none;border:0;width:40px;height:40px;background:none;position:relative;isolation:isolate;
     display:flex;align-items:center;justify-content:center;cursor:pointer;
@@ -161,24 +181,8 @@
   .np:disabled{cursor:default;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3)) saturate(.3) brightness(.93) opacity(.85)}
   .np.up{grid-column:2;grid-row:1}
   .np.left{grid-column:1;grid-row:2}
-  .np.center{grid-column:2;grid-row:2}
   .np.right{grid-column:3;grid-row:2}
   .np.down{grid-column:2;grid-row:3}
-  /* center = amber backlit display screen (the pedal's readout) */
-  .np.center{position:relative;overflow:hidden;width:auto;height:auto;border-radius:7px;display:flex;flex-direction:column;
-    justify-content:center;align-items:center;line-height:1.2;font-family:"Space Mono",monospace;
-    padding:7px 13px;min-width:60px;cursor:default;color:#f0c489;isolation:auto;filter:none;
-    background:radial-gradient(120% 90% at 50% 18%, #2e2a22 0%, #1a1813 55%, #0f0d0a 100%);
-    border:1px solid #000;text-shadow:none;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 12px rgba(0,0,0,.9),
-      inset 0 0 18px rgba(245,165,70,.12),0 2px 4px rgba(0,0,0,.5),0 0 0 3px #15171a,0 0 0 4px #000}
-  /* glass gloss across the screen */
-  .np.center::before{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 22%, rgba(255,255,255,0) 42%)}
-  .np.center b{position:relative;z-index:1;font-size:16px;color:#ffc06a;font-weight:700;letter-spacing:.02em;text-shadow:0 0 8px rgba(255,170,70,.7)}
-  .np.center i{position:relative;z-index:1;font-style:normal;font-size:10px;color:#c8aa7e;text-shadow:0 0 6px rgba(255,170,70,.4)}
-  .np-hint{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.08em;
-    color:#a08a6a;text-align:center}
 
   /* ---------- neck panel ---------- */
   .panel{background:linear-gradient(180deg,#f6efe1,var(--parch-2));
@@ -249,9 +253,8 @@
     .panel{padding:16px 4px 8px}
     .panel-head{padding:0 12px 10px}
     .np{width:44px;height:44px;font-size:16px}
+    .navpad{grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:9px}
     .fb-row{padding:0 4px}
-    .navpad{gap:9px}
-    .pedal{max-width:86%}
   }
   /* auf großen Tablets/Monitoren mehr Breite nutzen (iPad Pro quer, Desktop) */
   @media(min-width:1200px){.wrap{max-width:1080px}}
@@ -421,14 +424,15 @@
     <p class="swipe-hint" id="swipeHint">← seitlich wischen für den ganzen Hals →</p>
     <div class="navwrap no-print">
       <div class="pedal">
-        <i class="hinge" aria-hidden="true"></i>
+        <span class="pedal-led" aria-hidden="true"></span>
+        <div class="np-screen"><b id="npPos">Lage 1</b><i id="npTri">5–8 · △1</i></div>
         <div class="navpad" role="group" aria-label="Navigation">
-          <button class="np up"    id="npUp"    aria-label="Mehr Dreiklänge"><span class="g">▲</span></button>
-          <button class="np left"  id="npLeft"  aria-label="Position tiefer"><span class="g">◀</span></button>
-          <span   class="np center"><b id="npPos">Lage 1</b><i id="npTri">5–8 · △1</i></span>
-          <button class="np right" id="npRight" aria-label="Position höher"><span class="g">▶</span></button>
-          <button class="np down"  id="npDown"  aria-label="Weniger Dreiklänge"><span class="g">▼</span></button>
+          <button class="np up"    id="npUp"    aria-label="Umkehrung / Dreiklang hoch"><span class="g">▲</span></button>
+          <button class="np left"  id="npLeft"  aria-label="Lage tiefer"><span class="g">◀</span></button>
+          <button class="np right" id="npRight" aria-label="Lage höher"><span class="g">▶</span></button>
+          <button class="np down"  id="npDown"  aria-label="Umkehrung / Dreiklang runter"><span class="g">▼</span></button>
         </div>
+        <div class="pedal-tread" aria-hidden="true"></div>
       </div>
       <div class="chordwrap">
         <div class="chordbar-title">Akkorde der Tonart</div>
