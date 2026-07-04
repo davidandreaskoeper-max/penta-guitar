@@ -621,7 +621,8 @@ function neckSVG(){
   if(curShape){
     lo=Math.min(...curShape.notes.map(n=>n.f));
     hi=Math.max(...curShape.notes.map(n=>n.f));
-    if(hi-lo<2){ hi=Math.min(FRETS,lo+2); if(hi-lo<2) lo=Math.max(0,hi-2); }  // Mindestfenster
+    // Fenster um die Form auf ~5 Bünde aufweiten, damit die Skala drumherum Kontext gibt
+    const need=4; if(hi-lo<need){ const ext=need-(hi-lo); lo=Math.max(0,lo-Math.ceil(ext/2)); hi=Math.min(FRETS,lo+need); if(hi-lo<need) lo=Math.max(0,hi-need); }
   } else {
     ({lo,hi}=currentWindow());
   }
@@ -729,9 +730,19 @@ function neckSVG(){
         font-size="${fs}" font-weight="700" fill="${txt}">${lab}</text>`:""}</g>`;
   };
   if(chordMode){
-    // NUR die aktuelle Akkord-Form (eine Umkehrung), keine Kontext-Punkte
+    const CC=state.chordColor;
+    const shapeKey=new Set(); if(curShape) curShape.notes.forEach(n=>shapeKey.add(n.s+"_"+n.f));
+    // 1) Skala ganz normal (kein blass) – nur die Töne der Akkordform lassen wir aus, die kommen hervorgehoben
+    for(let s=0;s<6;s++)for(let f=dMin;f<=dMax;f++){
+      const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
+      if(!sc.offs.includes(iv)) continue;
+      if(shapeKey.has(s+"_"+f)) continue;
+      const lab = state.label==="note"?NAMES[pc]:state.label==="none"?"":sc.lbl[iv];
+      drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
+    }
+    // 2) GENAU EINE Akkord-Form hervorheben (auch akkordeigene Nicht-Skalentöne wie die None)
     if(curShape) curShape.notes.forEach(n=>{
-      const pc=(OPEN[n.s]+n.f)%12, isCR=pc===kc.rootPc, CC=state.chordColor;
+      const pc=(OPEN[n.s]+n.f)%12, isCR=pc===kc.rootPc;
       const lab = state.label==="none" ? "" : state.label==="note" ? NAMES[pc] : chordLbl[pc];
       drawDot(n.s,n.f, isCR?"#b5531d":CC, isCR?"#fff":textOn(CC), lab, `filter="url(#g)"`);
     });
