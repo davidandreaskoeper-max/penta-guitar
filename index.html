@@ -77,6 +77,10 @@
   .chord-name .fn{font-family:"Public Sans";font-size:12.5px;color:var(--ink-soft);font-weight:500}
   .chord-name .dot{color:var(--ink-soft);margin:0 8px;opacity:.6}
   .triad-info .chip strong{font-weight:700;color:var(--copper)}
+  .triad-info .chip.out-hint{color:var(--ink-soft)}
+  .ring-key{display:inline-block;width:15px;height:15px;border-radius:50%;box-sizing:border-box;
+    background:#4c3422;border:1.7px dashed #fff;vertical-align:-3px;margin-right:6px;
+    box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 
   /* ---------- nav d-pad (centered under fretboard) ---------- */
   .fb-row{padding:0 8px}
@@ -712,12 +716,13 @@ function neckSVG(){
     svg+=`<text x="${padL-2}" y="${y+4}" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">${STRING_LBL[s]}</text>`;
   }
   // ---- notes ----
-  const drawDot=(s,f,fill,txt,lab,glow)=>{
+  const drawDot=(s,f,fill,txt,lab,glow,ring)=>{
     const x = (f===0&&openCol) ? padL+openW*0.5 : fx(f);
     const y = yOf(s), r=R;
     const fs = lab.length>1?Math.max(8,Math.round(r*0.82)):Math.max(9,Math.round(r*0.92));
     svg+=`<g>
       <circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${fill}" ${glow}/>
+      ${ring?`<circle cx="${x}" cy="${y}" r="${(r+3.2).toFixed(1)}" fill="none" stroke="#fff" stroke-width="1.7" stroke-dasharray="3.2 2.6" stroke-linecap="round" opacity=".95"/>`:""}
       ${lab?`<text x="${x}" y="${(y+fs*0.35).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace"
         font-size="${fs}" font-weight="700" fill="${txt}">${lab}</text>`:""}</g>`;
   };
@@ -736,11 +741,13 @@ function neckSVG(){
       const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":sc.lbl[iv];
       drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
     }
-    // 2) die eine Umkehrung hervorheben (inkl. akkordeigener Nicht-Skalentöne wie die None)
+    // 2) die eine Umkehrung hervorheben; akkordeigene Töne AUSSERHALB der Skala
+    //    bekommen zusätzlich einen weißen gestrichelten Ring
     if(cur) cur.forEach(n=>{
-      const pc=(OPEN[n.s]+n.f)%12, isCR=pc===kc.rootPc;
+      const pc=(OPEN[n.s]+n.f)%12, iv=(pc-root+12)%12, isCR=pc===kc.rootPc;
+      const outside=!sc.offs.includes(iv);        // Ton liegt nicht in der Pentatonik
       const lab=state.label==="none"?"":state.label==="note"?NAMES[pc]:chordLbl[pc];
-      drawDot(n.s,n.f, isCR?"#b5531d":CC, isCR?"#fff":textOn(CC), lab, `filter="url(#g)"`);
+      drawDot(n.s,n.f, isCR?"#b5531d":CC, isCR?"#fff":textOn(CC), lab, `filter="url(#g)"`, outside);
     });
   } else {
     const triadMode=state.triads!=="all";
@@ -901,9 +908,12 @@ function render(){
     const idx=kShapes.length?Math.min(state.chordVar,kShapes.length-1):-1;
     const cur=idx>=0?kShapes[idx]:null;
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
+    const outTones = cur ? cur.notes.map(n=>(OPEN[n.s]+n.f)%12).filter(pc=>!sc.offs.includes((pc-state.root+12)%12)) : [];
+    const outHint = outTones.length
+      ? ` <span class="chip out-hint"><span class="ring-key"></span>${[...new Set(outTones)].map(pc=>NAMES[pc]).join("·")} außerhalb der Skala</span>` : "";
     ti.innerHTML = cur
       ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${idx+1}</span>`+
-        `<strong>${c.name}</strong> <small>· ${chordInvName(cur,c.rootPc)} · ${triadTones(cur)} · Variante ${idx+1}/${kShapes.length}</small></span>`
+        `<strong>${c.name}</strong> <small>· ${chordInvName(cur,c.rootPc)} · ${triadTones(cur)} · Variante ${idx+1}/${kShapes.length}</small></span>`+outHint
       : `<span class="chip"><strong>${c.rn} · ${c.name}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
