@@ -143,6 +143,7 @@
     background:linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 22%, rgba(255,255,255,0) 42%)}
   .np-screen b{position:relative;z-index:1;font-size:17px;color:#ffc06a;font-weight:700;
     letter-spacing:.02em;text-shadow:0 0 8px rgba(255,170,70,.7);white-space:nowrap}
+  .np-screen b .pos-tag{font-size:11.5px;color:#c9a86e;letter-spacing:0;text-shadow:0 0 6px rgba(255,170,70,.4)}
   .np-screen i{position:relative;z-index:1;font-style:normal;font-size:10.5px;color:#c8aa7e;
     text-shadow:0 0 6px rgba(255,170,70,.4);white-space:nowrap}
   /* Button-Kreuz UNTER dem Display (Mitte leer) */
@@ -935,7 +936,8 @@ function render(){
   if(cm){
     const c=keyChords()[state.showChord], kShapes=keyChordShapes();
     const cur=kShapes.length?kShapes[Math.min(state.chordVar,kShapes.length-1)]:null;
-    document.getElementById("npPos").textContent = c.name;
+    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
+    document.getElementById("npPos").innerHTML = `${c.name}<span class="pos-tag"> · ${lage}</span>`;
     document.getElementById("npTri").textContent = cur
       ? chordInvName(cur,c.rootPc)+" · "+(Math.min(state.chordVar,kShapes.length-1)+1)+"/"+kShapes.length
       : "—";
