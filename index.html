@@ -169,7 +169,13 @@
   .panel-head .name b{color:var(--copper)}
   .panel-head .formula{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft)}
   .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px 6px}
-  .scroller svg{display:block;max-width:none;margin:0 auto}
+  .scroller svg{display:block;margin:0 auto;height:auto}
+  /* Einzel-Lage (fast quadratisch): auf die verfügbare Breite hochskalieren,
+     gedeckelt, damit es auf großen Schirmen nicht absurd groß/hoch wird */
+  #neckScroll:not(.full) svg{width:100%;max-width:600px}
+  /* Ganzer Hals (sehr breit): auf großen Schirmen die Breite füllen,
+     auf dem Handy horizontal scrollen lassen */
+  #neckScroll.full svg{width:100%;min-width:680px;max-width:100%}
   .swipe-hint{display:none;font-family:"Space Mono",monospace;font-size:10.5px;
     color:var(--ink-soft);text-align:center;padding:2px 0 6px;letter-spacing:.1em}
 
@@ -222,6 +228,8 @@
     .navpad{gap:9px}
     .pedal{max-width:86%}
   }
+  /* auf großen Tablets/Monitoren mehr Breite nutzen (iPad Pro quer, Desktop) */
+  @media(min-width:1200px){.wrap{max-width:1080px}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
   /* ---------- print bar ---------- */
@@ -753,7 +761,9 @@ function render(){
   const sc=SCALES[state.type];
   document.getElementById("scaleName").innerHTML=`<b>${NAMES[state.root]}</b>-${sc.name}`;
   document.getElementById("scaleFormula").textContent=sc.formula;
-  document.getElementById("neckScroll").innerHTML=neckSVG();
+  const ns=document.getElementById("neckScroll");
+  ns.innerHTML=neckSVG();
+  ns.classList.toggle("full", state.pos==="all");   // Griffbrett-Skalierung: Lage vs. ganzer Hals
   // recolor legend swatch
   const ck=document.querySelector(".key.chord"), sk=document.querySelector(".key.scale");
   if(ck) ck.style.background=state.chordColor;
