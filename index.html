@@ -467,7 +467,7 @@ const SCALES={
 const FRETS=15, MARK=[3,5,7,9,15], DBL=12;
 const MIDI=[40,45,50,55,59,64];   // open-string pitches low E .. high e
 
-let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:null,chordShape:0};
+let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:null};
 
 /* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
 const QUAL={
@@ -565,29 +565,6 @@ function getTriads(){
   return shapes;
 }
 
-/* ---------- greifbare Umkehrungen eines Tonart-Akkords auf den 3 hohen Saiten (G·B·e) ---------- */
-/* die klassischen Dreiklang-Shapes; steigen als Grundstellung → 1. → 2. Umkehrung den Hals hinauf */
-const CHORD_SET=3;                             // Saitensatz: G(3) · B(4) · e(5)
-function chordShapes(){
-  if(state.showChord===null) return [];
-  const cpc=keyChords()[state.showChord].tones, a=CHORD_SET;
-  const cand=s=>{let x=[];for(let f=0;f<=FRETS;f++){if(cpc.includes((OPEN[s]+f)%12))x.push(f);}return x;};
-  const c0=cand(a),c1=cand(a+1),c2=cand(a+2), out=[];
-  for(const f0 of c0)for(const f1 of c1)for(const f2 of c2){
-    const pcs=new Set([(OPEN[a]+f0)%12,(OPEN[a+1]+f1)%12,(OPEN[a+2]+f2)%12]);
-    if(pcs.size!==3) continue;                 // vollständiger Dreiklang
-    if(Math.max(f0,f1,f2)-Math.min(f0,f1,f2)>4) continue;   // spielbar
-    out.push({notes:[{s:a,f:f0},{s:a+1,f:f1},{s:a+2,f:f2}], minF:Math.min(f0,f1,f2)});
-  }
-  out.sort((x,y)=> x.minF-y.minF);
-  return out;
-}
-/* Umkehrung aus dem Basston (tiefster klingender Ton) relativ zum Akkord-Grundton */
-function chordInvName(notes,rootPc){
-  const b=bassNote(notes), iv=(((OPEN[b.s]+b.f)%12)-rootPc+12)%12;
-  return iv===0?"Grundstellung":(iv===3||iv===4)?"1. Umkehrung":(iv===6||iv===7||iv===8)?"2. Umkehrung":"";
-}
-
 /* harmonic identity of the triad(s) inside the pentatonic */
 function chordInfo(){
   const r=state.root;
@@ -610,23 +587,13 @@ function neckPad(){
 /* ---------- build neck SVG (compact box, or full neck for "Ganzer Hals") ---------- */
 function neckSVG(){
   const sc=SCALES[state.type], root=state.root;
-  // Akkord-Overlay einer Tonart-Stufe? -> nur EINE Form zeigen, Fenster darum legen
+  // Tonart-Akkord hervorheben? Die Skala/Lage bleibt fest an ihrer Position,
+  // nur die Töne des gewählten Akkords leuchten (inkl. Nachbartöne außerhalb der Skala).
   const kc = state.showChord!==null ? keyChords()[state.showChord] : null;
   const chordMode = !!kc;
   const chordLbl={}; if(kc) kc.tones.forEach((pc,i)=>chordLbl[pc]=kc.toneLbls[i]);
-  const allShapes = chordMode ? chordShapes() : null;
-  const curShape  = chordMode && allShapes.length
-    ? allShapes[Math.min(state.chordShape,allShapes.length-1)] : null;
-  let lo,hi;
-  if(curShape){
-    lo=Math.min(...curShape.notes.map(n=>n.f));
-    hi=Math.max(...curShape.notes.map(n=>n.f));
-    // Fenster um die Form auf ~5 Bünde aufweiten, damit die Skala drumherum Kontext gibt
-    const need=4; if(hi-lo<need){ const ext=need-(hi-lo); lo=Math.max(0,lo-Math.ceil(ext/2)); hi=Math.min(FRETS,lo+need); if(hi-lo<need) lo=Math.max(0,hi-need); }
-  } else {
-    ({lo,hi}=currentWindow());
-  }
-  const FULL = !chordMode && state.pos==="all";
+  const {lo,hi}=currentWindow();
+  const FULL = state.pos==="all";
   const openCol = FULL || lo===0;
   // Kontext-Bünde je nach Bildschirmbreite: auf großen Screens links/rechts
   // mehr vom Hals zeigen (die Töne bleiben in der Lage lo..hi, siehe unten).
@@ -731,21 +698,22 @@ function neckSVG(){
   };
   if(chordMode){
     const CC=state.chordColor;
-    const shapeKey=new Set(); if(curShape) curShape.notes.forEach(n=>shapeKey.add(n.s+"_"+n.f));
-    // 1) Skala ganz normal (kein blass) – nur die Töne der Akkordform lassen wir aus, die kommen hervorgehoben
+    // Skala fest in der Lage; Töne des gewählten Akkords hervorheben – auch
+    // benachbarte Akkordtöne, die außerhalb der Pentatonik liegen (z. B. die None).
     for(let s=0;s<6;s++)for(let f=dMin;f<=dMax;f++){
       const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
-      if(!sc.offs.includes(iv)) continue;
-      if(shapeKey.has(s+"_"+f)) continue;
-      const lab = state.label==="note"?NAMES[pc]:state.label==="none"?"":sc.lbl[iv];
-      drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
+      const isScale=sc.offs.includes(iv), isTone=kc.tones.includes(pc);
+      if(!isScale && !isTone) continue;
+      if(state.pos!=="all" && (f<lo||f>hi)) continue;        // in der Lage bleiben
+      if(isTone){                                            // Akkordton → hervorgehoben
+        const isCR=pc===kc.rootPc;
+        const lab=state.label==="none"?"":state.label==="note"?NAMES[pc]:chordLbl[pc];
+        drawDot(s,f, isCR?"#b5531d":CC, isCR?"#fff":textOn(CC), lab, `filter="url(#g)"`);
+      } else {                                               // übrige Skalentöne ganz normal
+        const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":sc.lbl[iv];
+        drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
+      }
     }
-    // 2) GENAU EINE Akkord-Form hervorheben (auch akkordeigene Nicht-Skalentöne wie die None)
-    if(curShape) curShape.notes.forEach(n=>{
-      const pc=(OPEN[n.s]+n.f)%12, isCR=pc===kc.rootPc;
-      const lab = state.label==="none" ? "" : state.label==="note" ? NAMES[pc] : chordLbl[pc];
-      drawDot(n.s,n.f, isCR?"#b5531d":CC, isCR?"#fff":textOn(CC), lab, `filter="url(#g)"`);
-    });
   } else {
     const triadMode=state.triads!=="all";
     let allow=null;
@@ -889,7 +857,7 @@ function render(){
   document.getElementById("scaleFormula").textContent=sc.formula;
   const ns=document.getElementById("neckScroll");
   ns.innerHTML=neckSVG();
-  ns.classList.toggle("full", state.showChord===null && state.pos==="all");   // Skalierung: Lage/Form vs. ganzer Hals
+  ns.classList.toggle("full", state.pos==="all");   // Griffbrett-Skalierung: Lage vs. ganzer Hals
   // recolor legend swatch
   const ck=document.querySelector(".key.chord"), sk=document.querySelector(".key.scale");
   if(ck) ck.style.background=state.chordColor;
@@ -898,16 +866,12 @@ function render(){
   const ci=chordInfo();
   const cn=document.getElementById("triadChord");
   const ti=document.getElementById("triadInfo");
-  if(state.showChord!==null){                       // Akkord-Overlay einer Tonart-Stufe
+  if(state.showChord!==null){                       // Tonart-Akkord in der festen Lage hervorheben
     const c=keyChords()[state.showChord];
     const keyName=`${NAMES[state.root]}-${state.type==="minor"?"Moll":"Dur"}`;
-    const shapes=chordShapes();
-    const sh=shapes.length?shapes[Math.min(state.chordShape,shapes.length-1)]:null;
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
-    ti.innerHTML= sh
-      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${Math.min(state.chordShape,shapes.length-1)+1}</span>`+
-        `<strong>${c.name}</strong> <small>· ${chordInvName(sh.notes,c.rootPc)} · ${triadTones(sh.notes)} · Form ${Math.min(state.chordShape,shapes.length-1)+1}/${shapes.length}</small></span>`
-      : `<span class="chip"><small>keine greifbare Form gefunden</small></span>`;
+    ti.innerHTML=`<span class="chip"><strong>${c.rn} · ${c.name}</strong> `+
+      `<small>· Akkordtöne ${c.tones.map(pc=>NAMES[pc]).join("·")}</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
       `<span class="fn">— Stufe ${ci.tonic.deg} · ${ci.tonic.fn}</span>`;
@@ -926,14 +890,10 @@ function render(){
   // nav d-pad readout + bounds
   const cm = state.showChord!==null;
   if(cm){
-    const c=keyChords()[state.showChord], shapes=chordShapes();
-    const sh=shapes.length?shapes[Math.min(state.chordShape,shapes.length-1)]:null;
+    const c=keyChords()[state.showChord], w=currentWindow();
+    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
     document.getElementById("npPos").textContent = c.name;
-    if(sh){
-      const lof=Math.min(...sh.notes.map(n=>n.f)), hif=Math.max(...sh.notes.map(n=>n.f));
-      const fr = lof===0 && hif===0 ? "offen" : (lof===hif?(""+lof):(lof+"–"+hif));
-      document.getElementById("npTri").textContent = chordInvName(sh.notes,c.rootPc)+" · "+fr;
-    } else document.getElementById("npTri").textContent = "—";
+    document.getElementById("npTri").textContent = lage + (state.pos==="all"?"":" · "+w.lo+"–"+w.hi);
   } else {
     const w=currentWindow();
     const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
@@ -941,7 +901,7 @@ function render(){
     document.getElementById("npTri").textContent =
       (state.pos==="all"?"":(w.lo+"–"+w.hi)) + (state.triads==="all" ? " · Skala" : " · △"+state.triads);
   }
-  const sh=document.getElementById("swipeHint"); if(sh) sh.style.display = (!cm && state.pos==="all") ? "" : "none";
+  const sh=document.getElementById("swipeHint"); if(sh) sh.style.display = state.pos==="all" ? "" : "none";
   document.getElementById("npLeft").disabled  = false;
   document.getElementById("npRight").disabled = false;
   document.getElementById("npDown").disabled  = cm ? false : TRI_ORDER.indexOf(state.triads)===0;
@@ -964,8 +924,7 @@ function renderChordPills(){
   box.querySelectorAll(".cpill").forEach(b=>b.addEventListener("click",()=>{
     const d=+b.dataset.deg;
     state.showChord = state.showChord===d ? null : d;   // nochmal tippen = Akkord aus
-    state.chordShape=0;
-    renderChordPills(); render();
+    renderChordPills(); render();                       // Lage/Position bleibt unverändert!
   }));
 }
 
@@ -985,11 +944,11 @@ fillPos();
 // sync controls with the default state
 posSel.value=state.pos;
 document.getElementById("triads").value=state.triads;
-rootSel.addEventListener("change",e=>{state.root=+e.target.value;state.chordShape=0;fillPos();renderChordPills();render();});
+rootSel.addEventListener("change",e=>{state.root=+e.target.value;fillPos();renderChordPills();render();});
 posSel.addEventListener("change",e=>{state.pos=e.target.value;render();});
 document.querySelectorAll("#type button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#type button").forEach(x=>x.setAttribute("aria-pressed","false"));
-  b.setAttribute("aria-pressed","true"); state.type=b.dataset.type; state.chordShape=0; fillPos(); renderChordPills(); render();
+  b.setAttribute("aria-pressed","true"); state.type=b.dataset.type; fillPos(); renderChordPills(); render();
 }));
 document.querySelectorAll("#label button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#label button").forEach(x=>x.setAttribute("aria-pressed","false"));
@@ -1013,20 +972,15 @@ document.getElementById("pA3").addEventListener("click",()=>printSize("A3"));
 /* ---------- d-pad navigation ---------- */
 const POS_ORDER=["0","1","2","3","4"];
 const TRI_ORDER=["all","1","2","3","4"];
-// im Akkord-Modus: ◀▶ blättert durch die Umkehrungen/Positionen des Akkords
-function stepChordShape(d){
-  const shapes=chordShapes(); if(!shapes.length) return;
-  state.chordShape=(state.chordShape+d+shapes.length)%shapes.length;   // hoch/runter am Hals
-  render();
-}
 // im Akkord-Modus: ▲▼ wechselt die Stufe (nächster/vorheriger Akkord der Tonart)
 function stepChordDeg(d){
   const n=keyChords().length;
-  state.showChord=((state.showChord+d)%n+n)%n; state.chordShape=0;
+  state.showChord=((state.showChord+d)%n+n)%n;
   renderChordPills(); render();
 }
+// ◀▶ bewegt IMMER die Lage (Position der Skala) – auch im Akkord-Modus,
+// so sieht man denselben Akkord in einer anderen Lage
 function stepPos(d){
-  if(state.showChord!==null){ stepChordShape(d); return; }
   let i=POS_ORDER.indexOf(state.pos); if(i<0)i=0;
   i=(i+d+POS_ORDER.length)%POS_ORDER.length;            // wrap through the 5 Lagen
   state.pos=POS_ORDER[i]; posSel.value=state.pos; render();}
