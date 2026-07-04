@@ -80,7 +80,28 @@
 
   /* ---------- nav d-pad (centered under fretboard) ---------- */
   .fb-row{padding:0 8px}
-  .navwrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 0 2px}
+  .navwrap{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;
+    align-items:center;gap:18px 28px;padding:16px 0 2px}
+  /* ---- Tonart-Akkorde als Pillen neben dem Pedal ---- */
+  .chordwrap{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+  .chordbar-title{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--brass);opacity:.9;text-align:center}
+  .chordbar{display:flex;flex-direction:column;gap:7px}
+  .cpill{display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;
+    border:1px solid rgba(201,138,47,.5);border-radius:999px;background:rgba(0,0,0,.22);
+    color:var(--parch);font-family:"Public Sans";font-size:14px;padding:6px 14px 6px 9px;
+    transition:.13s;min-width:132px}
+  .cpill .rn{font-family:"Space Mono",monospace;font-size:12px;font-weight:700;
+    color:var(--brass);min-width:38px;text-align:center;transition:.13s}
+  .cpill .nm{font-weight:700}
+  .cpill:hover{background:rgba(201,138,47,.18);border-color:var(--brass)}
+  .cpill[aria-pressed="true"]{background:var(--brass);color:#1c130b;border-color:var(--brass-glow)}
+  .cpill[aria-pressed="true"] .rn{color:#1c130b}
+  .cpill:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px}
+  @media(max-width:620px){
+    .chordbar{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:340px}
+    .cpill{min-width:0;padding:6px 12px}
+  }
   /* real stomp-pedal enclosure, centred under the fretboard */
   .pedal{position:relative;isolation:isolate;width:max-content;max-width:74%;margin:0 auto;
     padding:44px 22px 104px;border-radius:14px;
@@ -409,6 +430,10 @@
           <button class="np down"  id="npDown"  aria-label="Weniger Dreiklänge"><span class="g">▼</span></button>
         </div>
       </div>
+      <div class="chordwrap">
+        <div class="chordbar-title">Akkorde der Tonart</div>
+        <div class="chordbar" id="chordPills" role="group" aria-label="Akkorde der Tonart – zum Hervorheben antippen"></div>
+      </div>
     </div>
   </div>
 
@@ -442,7 +467,34 @@ const SCALES={
 const FRETS=15, MARK=[3,5,7,9,15], DBL=12;
 const MIDI=[40,45,50,55,59,64];   // open-string pitches low E .. high e
 
-let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f"};
+let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:null};
+
+/* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
+const QUAL={
+  "":   {ivs:[0,4,7], lbl:["1","3","5"],   suf:""},   // Dur
+  "m":  {ivs:[0,3,7], lbl:["1","♭3","5"],  suf:"m"},  // Moll
+  "dim":{ivs:[0,3,6], lbl:["1","♭3","♭5"], suf:"°"}   // vermindert
+};
+const KEY_MINOR=[
+  {rn:"i",   off:0,  q:"m"},   {rn:"ii°", off:2,  q:"dim"},
+  {rn:"♭III", off:3,  q:""},    {rn:"iv",  off:5,  q:"m"},
+  {rn:"v",   off:7,  q:"m"},   {rn:"♭VI",  off:8,  q:""},
+  {rn:"♭VII", off:10, q:""}
+];
+const KEY_MAJOR=[
+  {rn:"I",   off:0,  q:""},    {rn:"ii",  off:2,  q:"m"},
+  {rn:"iii", off:4,  q:"m"},   {rn:"IV",  off:5,  q:""},
+  {rn:"V",   off:7,  q:""},    {rn:"vi",  off:9,  q:"m"},
+  {rn:"vii°",off:11, q:"dim"}
+];
+function keyChords(){
+  const tbl = state.type==="minor" ? KEY_MINOR : KEY_MAJOR;
+  return tbl.map(d=>{
+    const rootPc=(state.root+d.off)%12, Q=QUAL[d.q];
+    return {rn:d.rn, name:NAMES[rootPc]+Q.suf, rootPc,
+      tones:Q.ivs.map(i=>(rootPc+i)%12), toneLbls:Q.lbl};
+  });
+}
 
 /* color helpers */
 function textOn(hex){const h=hex.replace('#','');const r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);
@@ -629,32 +681,51 @@ function neckSVG(){
     svg+=`<line x1="${bx}" y1="${(y-sw*0.22).toFixed(1)}" x2="${bx+bw}" y2="${(y-sw*0.22).toFixed(1)}" stroke="${hi}" stroke-width="${Math.max(0.5,sw*0.34).toFixed(2)}" stroke-opacity=".85"/>`; // shimmer
     svg+=`<text x="${padL-2}" y="${y+4}" text-anchor="middle" font-family="Space Mono,monospace" font-size="12" font-weight="700" fill="#9b8a70">${STRING_LBL[s]}</text>`;
   }
-  // ---- notes (only the currently selected triad) ----
+  // ---- notes: Pentatonik/Dreiklang – oder Akkord-Overlay einer Tonart-Stufe ----
   const triadMode=state.triads!=="all";
   let allow=null;
   if(triadMode){
     const shapes=getTriads(); const idx=Math.min(+state.triads-1, shapes.length-1);
     allow=new Set(); if(idx>=0&&shapes[idx]) shapes[idx].forEach(n=>allow.add(n.s+"_"+n.f));
   }
+  // gewählte Tonart-Stufe: deren Akkordtöne hervorheben (auch außerhalb der Penta.)
+  const kc = state.showChord!==null ? keyChords()[state.showChord] : null;
+  const chordMode = !!kc;
+  const chordLbl={}; if(kc) kc.tones.forEach((pc,i)=>chordLbl[pc]=kc.toneLbls[i]);
   for(let s=0;s<6;s++){
     for(let f=dMin;f<=dMax;f++){
       const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
-      if(!sc.offs.includes(iv)) continue;
+      const isScale=sc.offs.includes(iv);
+      const isTone = chordMode && kc.tones.includes(pc);
+      if(chordMode){ if(!isScale && !isTone) continue; }
+      else if(!isScale) continue;
       if(state.pos!=="all" && (f<lo||f>hi)) continue;        // Nachbar-Lagen ausblenden
-      const isRoot=iv===0, isChord=sc.chord.includes(iv);
-      const hot   = triadMode ? allow.has(s+"_"+f) : isChord;
-      const rootHi= isRoot && state.showRoot && (triadMode ? allow.has(s+"_"+f) : true);
       const x = (f===0&&openCol) ? padL+openW*0.5 : fx(f);
       const y = yOf(s), r=R;
       const CC=state.chordColor;
-      let fill,stroke="none",txt;
-      if(rootHi){fill="#b5531d";txt="#fff";}
-      else if(hot){fill=CC;txt=textOn(CC);}
-      else{fill="#efe7d6";stroke=CC;txt=shade(CC,.6);}
-      const glow = (hot||rootHi) ? `filter="url(#g)"` : "";
-      const lab = state.label==="note" ? NAMES[pc] : state.label==="none" ? "" : sc.lbl[iv];
+      let fill,stroke="none",txt,glow="",gop="",lab="";
+      if(chordMode){
+        if(isTone){                                  // Akkordton der Stufe → hervorgehoben
+          const isCR = pc===kc.rootPc;
+          fill = isCR ? "#b5531d" : CC;
+          txt  = isCR ? "#fff" : textOn(CC);
+          glow = `filter="url(#g)"`;
+          lab  = state.label==="none" ? "" : state.label==="note" ? NAMES[pc] : chordLbl[pc];
+        } else {                                     // Skalenton als blasser Kontext
+          fill="#efe7d6"; stroke=shade(CC,.75); txt=shade(CC,.6); gop=' opacity="0.4"';
+        }
+      } else {
+        const isRoot=iv===0, isChord=sc.chord.includes(iv);
+        const hot   = triadMode ? allow.has(s+"_"+f) : isChord;
+        const rootHi= isRoot && state.showRoot && (triadMode ? allow.has(s+"_"+f) : true);
+        if(rootHi){fill="#b5531d";txt="#fff";}
+        else if(hot){fill=CC;txt=textOn(CC);}
+        else{fill="#efe7d6";stroke=CC;txt=shade(CC,.6);}
+        glow = (hot||rootHi) ? `filter="url(#g)"` : "";
+        lab = state.label==="note" ? NAMES[pc] : state.label==="none" ? "" : sc.lbl[iv];
+      }
       const fs = lab.length>1?Math.max(8,Math.round(r*0.82)):Math.max(9,Math.round(r*0.92));
-      svg+=`<g>
+      svg+=`<g${gop}>
         <circle cx="${x}" cy="${y}" r="${r.toFixed(1)}" fill="${fill}"
           ${stroke!=="none"?`stroke="${stroke}" stroke-width="2.3"`:""} ${glow}/>
         ${lab?`<text x="${x}" y="${(y+fs*0.35).toFixed(1)}" text-anchor="middle" font-family="Space Mono,monospace"
@@ -783,26 +854,31 @@ function render(){
   const ck=document.querySelector(".key.chord"), sk=document.querySelector(".key.scale");
   if(ck) ck.style.background=state.chordColor;
   if(sk) sk.style.borderColor=state.chordColor;
-  // chord / degree identity
-  const ci=chordInfo(), cn=document.getElementById("triadChord");
-  if(state.triads!=="all"){
+  // Akkord-/Stufen-Identität über dem Griffbrett
+  const ci=chordInfo();
+  const cn=document.getElementById("triadChord");
+  const ti=document.getElementById("triadInfo");
+  if(state.showChord!==null){                       // Akkord-Overlay einer Tonart-Stufe
+    const c=keyChords()[state.showChord];
+    const keyName=`${NAMES[state.root]}-${state.type==="minor"?"Moll":"Dur"}`;
+    cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
+    ti.innerHTML=`<span class="chip"><strong>${c.rn} · ${c.name}</strong> `+
+      `<small>· Akkordtöne ${c.tones.map(pc=>NAMES[pc]).join("·")}</small></span>`;
+  } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
       `<span class="fn">— Stufe ${ci.tonic.deg} · ${ci.tonic.fn}</span>`;
-  } else {
-    cn.innerHTML=`Enthaltene Akkorde: <strong>${ci.tonic.name}</strong> `+
-      `<span class="fn">(Stufe ${ci.tonic.deg}, ${ci.tonic.fn})</span>`+
-      `<span class="dot">·</span><strong>${ci.rel.name}</strong> `+
-      `<span class="fn">(Stufe ${ci.rel.deg}, ${ci.rel.fn})</span>`;
-  }
-  // triad names (inversions)
-  const ti=document.getElementById("triadInfo");
-  if(state.triads!=="all"){
     const shapes=getTriads(), idx=Math.min(+state.triads-1,shapes.length-1), sh=shapes[idx];
     const lage = state.pos==="all" ? "H" : (+state.pos+1);
     ti.innerHTML = (idx>=0&&sh)
       ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${lage}</span><strong>${slashName(sh)}</strong> <small>· ${invName(sh)} · ${triadTones(sh)}</small></span>`
       : "";
-  } else ti.innerHTML="";
+  } else {
+    cn.innerHTML=`Enthaltene Akkorde: <strong>${ci.tonic.name}</strong> `+
+      `<span class="fn">(Stufe ${ci.tonic.deg}, ${ci.tonic.fn})</span>`+
+      `<span class="dot">·</span><strong>${ci.rel.name}</strong> `+
+      `<span class="fn">(Stufe ${ci.rel.deg}, ${ci.rel.fn})</span>`;
+    ti.innerHTML="";
+  }
   // nav d-pad readout + bounds
   {
     const w=currentWindow();
@@ -824,6 +900,23 @@ function renderTriads(){
     `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"M"+i)}</div>`).join("");
 }
 
+/* ---------- Tonart-Akkorde: Pillen bauen + Klick-Handling ---------- */
+function renderChordPills(){
+  const box=document.getElementById("chordPills");
+  const chords=keyChords();
+  let html=`<button class="cpill scale-pill" data-deg="off" aria-pressed="${state.showChord===null}">`+
+    `<span class="rn">◯</span><span class="nm">Nur Skala</span></button>`;
+  html+=chords.map((c,i)=>
+    `<button class="cpill" data-deg="${i}" aria-pressed="${state.showChord===i}">`+
+    `<span class="rn">${c.rn}</span><span class="nm">${c.name}</span></button>`).join("");
+  box.innerHTML=html;
+  box.querySelectorAll(".cpill").forEach(b=>b.addEventListener("click",()=>{
+    const d=b.dataset.deg;
+    state.showChord = d==="off" ? null : (state.showChord===+d ? null : +d);
+    renderChordPills(); render();
+  }));
+}
+
 /* ---------- controls ---------- */
 const rootSel=document.getElementById("root");
 NAMES.forEach((n,i)=>{const o=document.createElement("option");o.value=i;o.textContent=n;if(i===9)o.selected=true;rootSel.appendChild(o);});
@@ -840,11 +933,11 @@ fillPos();
 // sync controls with the default state
 posSel.value=state.pos;
 document.getElementById("triads").value=state.triads;
-rootSel.addEventListener("change",e=>{state.root=+e.target.value;fillPos();render();});
+rootSel.addEventListener("change",e=>{state.root=+e.target.value;fillPos();renderChordPills();render();});
 posSel.addEventListener("change",e=>{state.pos=e.target.value;render();});
 document.querySelectorAll("#type button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#type button").forEach(x=>x.setAttribute("aria-pressed","false"));
-  b.setAttribute("aria-pressed","true"); state.type=b.dataset.type; fillPos(); render();
+  b.setAttribute("aria-pressed","true"); state.type=b.dataset.type; fillPos(); renderChordPills(); render();
 }));
 document.querySelectorAll("#label button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#label button").forEach(x=>x.setAttribute("aria-pressed","false"));
@@ -890,7 +983,7 @@ document.addEventListener("keydown",e=>{
    gezeichneten Bünde an die neue Breite anpasst */
 let _rz; window.addEventListener("resize",()=>{clearTimeout(_rz);_rz=setTimeout(render,150);});
 
-render(); renderTriads();
+renderChordPills(); render(); renderTriads();
 </script>
 </body>
 </html>
