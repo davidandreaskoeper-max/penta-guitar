@@ -170,9 +170,13 @@
   .panel-head .formula{font-family:"Space Mono",monospace;font-size:12.5px;color:var(--ink-soft)}
   .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px 6px}
   .scroller svg{display:block;margin:0 auto;height:auto}
-  /* Einzel-Lage (fast quadratisch): auf die verfügbare Breite hochskalieren,
-     gedeckelt, damit es auf großen Schirmen nicht absurd groß/hoch wird */
-  #neckScroll:not(.full) svg{width:100%;max-width:600px}
+  /* Einzel-Lage: auf die verfügbare Breite skalieren, aber nur moderat
+     vergrößern (sonst wird das gerasterte Holz/Glow unscharf). Auf breiten
+     Screens werden zusätzlich mehr Bünde gezeichnet (siehe neckPad() im JS),
+     daher wächst die Deckelung mit. */
+  #neckScroll:not(.full) svg{width:100%;max-width:460px}
+  @media(min-width:760px){ #neckScroll:not(.full) svg{max-width:680px} }
+  @media(min-width:1100px){ #neckScroll:not(.full) svg{max-width:820px} }
   /* Ganzer Hals (sehr breit): auf großen Schirmen die Breite füllen,
      auf dem Handy horizontal scrollen lassen */
   #neckScroll.full svg{width:100%;min-width:680px;max-width:100%}
@@ -520,14 +524,25 @@ function chordInfo(){
     rel:  {name:NAMES[(r+9)%12]+"m", deg:"vi", fn:"Tonikaparallele (rel. Moll)"}};
 }
 
+/* zusätzliche Kontext-Bünde je Seite, abhängig von der Fensterbreite */
+function neckPad(){
+  const w=window.innerWidth||0;
+  if(w>=1100) return 3;
+  if(w>=760)  return 2;
+  return 0;
+}
+
 /* ---------- build neck SVG (compact box, or full neck for "Ganzer Hals") ---------- */
 function neckSVG(){
   const sc=SCALES[state.type], root=state.root;
   const {lo,hi}=currentWindow();
   const FULL = state.pos==="all";
   const openCol = FULL || lo===0;
-  const dMin = FULL?0:(lo===0?0:lo-1);   // leftmost line (gives fret-lo notes a cell)
-  const dMax = FULL?FRETS:hi;
+  // Kontext-Bünde je nach Bildschirmbreite: auf großen Screens links/rechts
+  // mehr vom Hals zeigen (die Töne bleiben in der Lage lo..hi, siehe unten).
+  const pad = FULL?0:neckPad();
+  const dMin = FULL?0:Math.max(0,(lo===0?0:lo-1)-pad);   // leftmost line (gives fret-lo notes a cell)
+  const dMax = FULL?FRETS:Math.min(FRETS,hi+pad);
   const nCells=dMax-dMin;
   const cellW=54, padL=22, padR=14, padT=20, rowH=38, padB=32;
   const openW=openCol?40:14;
@@ -870,6 +885,10 @@ document.addEventListener("keydown",e=>{
   else if(k==="ArrowUp"){stepTri(1);e.preventDefault();}
   else if(k==="ArrowDown"){stepTri(-1);e.preventDefault();}
 });
+
+/* bei Größenänderung / Drehen neu rendern, damit sich die Zahl der
+   gezeichneten Bünde an die neue Breite anpasst */
+let _rz; window.addEventListener("resize",()=>{clearTimeout(_rz);_rz=setTimeout(render,150);});
 
 render(); renderTriads();
 </script>
