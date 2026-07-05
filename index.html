@@ -106,10 +106,8 @@
   .cpill[aria-pressed="true"] .rn{color:#1c130b}
   .cpill:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px}
   @media(max-width:620px){
-    .navwrap{grid-template-columns:1fr;justify-items:center;gap:16px 0}
-    /* höhere Spezifität, damit diese Regeln die späteren Basis-Regeln überschreiben */
-    .navwrap .pedal{grid-column:1;justify-self:center}
-    .navwrap .chordwrap{grid-column:1;justify-self:center}
+    /* Flexbox statt Grid: ignoriert die grid-column-Regeln -> Pedal & Pillen sicher zentriert & gestapelt */
+    .navwrap{display:flex;flex-direction:column;align-items:center;gap:16px}
     .chordbar{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:340px}
     .cpill{min-width:0;padding:6px 12px}
   }
