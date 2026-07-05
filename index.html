@@ -143,7 +143,9 @@
     background:linear-gradient(160deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 22%, rgba(255,255,255,0) 42%)}
   .np-screen b{position:relative;z-index:1;font-size:17px;color:#ffc06a;font-weight:700;
     letter-spacing:.02em;text-shadow:0 0 8px rgba(255,170,70,.7);white-space:nowrap}
-  .np-screen b .pos-tag{font-size:11.5px;color:#c9a86e;letter-spacing:0;text-shadow:0 0 6px rgba(255,170,70,.4)}
+  .np-screen b .deg-tag{display:inline-block;margin-left:8px;padding:0 7px;border-radius:5px;
+    font-size:13px;font-weight:700;color:#1a1206;background:#ffc06a;vertical-align:2px;
+    text-shadow:none;box-shadow:0 0 7px rgba(255,170,70,.55)}
   .np-screen i{position:relative;z-index:1;font-style:normal;font-size:10.5px;color:#c8aa7e;
     text-shadow:0 0 6px rgba(255,170,70,.4);white-space:nowrap}
   /* Button-Kreuz UNTER dem Display (Mitte leer) */
@@ -491,22 +493,22 @@ const QUAL={
   "dim":{ivs:[0,3,6], lbl:["1","♭3","♭5"], suf:"°"}   // vermindert
 };
 const KEY_MINOR=[
-  {rn:"i",   off:0,  q:"m"},   {rn:"ii°", off:2,  q:"dim"},
-  {rn:"♭III", off:3,  q:""},    {rn:"iv",  off:5,  q:"m"},
-  {rn:"v",   off:7,  q:"m"},   {rn:"♭VI",  off:8,  q:""},
-  {rn:"♭VII", off:10, q:""}
+  {rn:"i",   nash:"1",  off:0,  q:"m"},   {rn:"ii°", nash:"2",  off:2,  q:"dim"},
+  {rn:"♭III", nash:"♭3", off:3,  q:""},    {rn:"iv",  nash:"4",  off:5,  q:"m"},
+  {rn:"v",   nash:"5",  off:7,  q:"m"},   {rn:"♭VI",  nash:"♭6", off:8,  q:""},
+  {rn:"♭VII", nash:"♭7", off:10, q:""}
 ];
 const KEY_MAJOR=[
-  {rn:"I",   off:0,  q:""},    {rn:"ii",  off:2,  q:"m"},
-  {rn:"iii", off:4,  q:"m"},   {rn:"IV",  off:5,  q:""},
-  {rn:"V",   off:7,  q:""},    {rn:"vi",  off:9,  q:"m"},
-  {rn:"vii°",off:11, q:"dim"}
+  {rn:"I",   nash:"1",  off:0,  q:""},    {rn:"ii",  nash:"2",  off:2,  q:"m"},
+  {rn:"iii", nash:"3",  off:4,  q:"m"},   {rn:"IV",  nash:"4",  off:5,  q:""},
+  {rn:"V",   nash:"5",  off:7,  q:""},    {rn:"vi",  nash:"6",  off:9,  q:"m"},
+  {rn:"vii°",nash:"7",  off:11, q:"dim"}
 ];
 function keyChords(){
   const tbl = state.type==="minor" ? KEY_MINOR : KEY_MAJOR;
   return tbl.map(d=>{
     const rootPc=(state.root+d.off)%12, Q=QUAL[d.q];
-    return {rn:d.rn, name:NAMES[rootPc]+Q.suf, rootPc,
+    return {rn:d.rn, nash:d.nash, name:NAMES[rootPc]+Q.suf, rootPc,
       tones:Q.ivs.map(i=>(rootPc+i)%12), toneLbls:Q.lbl};
   });
 }
@@ -916,7 +918,7 @@ function render(){
     const idx=kShapes.length?Math.min(state.chordVar,kShapes.length-1):-1;
     const cur=idx>=0?kShapes[idx]:null;
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
-    const outTones = cur ? cur.notes.map(n=>(OPEN[n.s]+n.f)%12).filter(pc=>!scaleOffs().includes((pc-state.root+12)%12)) : [];
+    const outTones = cur ? cur.map(n=>(OPEN[n.s]+n.f)%12).filter(pc=>!scaleOffs().includes((pc-state.root+12)%12)) : [];
     const outHint = outTones.length
       ? ` <span class="chip out-hint"><span class="ring-key"></span>${[...new Set(outTones)].map(pc=>NAMES[pc]).join("·")} außerhalb der Skala</span>` : "";
     ti.innerHTML = cur
@@ -941,13 +943,10 @@ function render(){
   // nav d-pad readout + bounds
   const cm = state.showChord!==null;
   if(cm){
-    const c=keyChords()[state.showChord], kShapes=keyChordShapes();
-    const cur=kShapes.length?kShapes[Math.min(state.chordVar,kShapes.length-1)]:null;
-    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
-    document.getElementById("npPos").innerHTML = `${c.name}<span class="pos-tag"> · ${lage}</span>`;
-    document.getElementById("npTri").textContent = cur
-      ? chordInvName(cur,c.rootPc)+" · "+(Math.min(state.chordVar,kShapes.length-1)+1)+"/"+kShapes.length
-      : "—";
+    const c=keyChords()[state.showChord];
+    const lage = state.pos==="all" ? "Ganzer Hals" : ("Lage "+(+state.pos+1));
+    document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.nash}</span>`;
+    document.getElementById("npTri").textContent = lage;
   } else {
     const w=currentWindow();
     const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
