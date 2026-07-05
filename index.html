@@ -351,7 +351,7 @@
       <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#eef2ef"/><stop offset=".64" stop-color="#d9e2ec"/><stop offset=".84" stop-color="#ecdcec"/><stop offset="1" stop-color="#c0c6cf"/>
     </radialGradient>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
-      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#fbad3b" flood-opacity=".7"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="1.4" flood-color="#fbad3b" flood-opacity=".75"/>
     </filter>
     <filter id="bsh" x="-25%" y="-25%" width="150%" height="160%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.42"/>
@@ -631,7 +631,7 @@ function neckSVG(){
   const lineX=f=>nutX+((dph(f)-_x0)/_span)*usable;
   const fx=f=>(lineX(Math.max(dMin,f-1))+lineX(f))/2;   // note sits in the cell behind fret f
   let minCell=Infinity; for(let f=dMin+1;f<=dMax;f++) minCell=Math.min(minCell,lineX(f)-lineX(f-1));
-  const R=Math.max(9,Math.min(14,(isFinite(minCell)?minCell:cellW)*0.46));
+  const R=0.9*Math.max(9,Math.min(14,(isFinite(minCell)?minCell:cellW)*0.46));   // Notenpunkte 10% kleiner
   let svg=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${NAMES[root]} ${sc.name} Griffbrett">`;
   // ---- defs: ebony wood, grain, silver fretwire, pearl inlay, glow ----
   svg+=`<defs>
@@ -659,7 +659,7 @@ function neckSVG(){
       <stop offset="0" stop-color="#ffffff"/><stop offset=".38" stop-color="#eef2ef"/><stop offset=".64" stop-color="#d9e2ec"/><stop offset=".84" stop-color="#ecdcec"/><stop offset="1" stop-color="#c0c6cf"/>
     </radialGradient>
     <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
-      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="${shade(state.chordColor,1.25)}" flood-opacity=".7"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="1.4" flood-color="${shade(state.chordColor,1.25)}" flood-opacity=".75"/>
     </filter>
     <filter id="bsh" x="-25%" y="-25%" width="150%" height="160%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.42"/>
