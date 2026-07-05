@@ -903,7 +903,7 @@ function triadPatterns(rootPc, ivs, chordName){
       if(invIdx in seen) continue; seen[invIdx]=1;
       const frets=[null,null,null,null,null,null];
       frets[a]=sh.f0; frets[a+1]=sh.f1; frets[a+2]=sh.f2;
-      setCards.push({invIdx, card:{title:`${chordName} · ${label}`, root:rootPc, frets}});
+      setCards.push({invIdx, card:{title:chordName, root:rootPc, frets}});   // Überschrift: nur der Akkord
     }
     setCards.sort((x,y)=>x.invIdx-y.invIdx);       // links→rechts: Grundstellung, 1., 2. Umkehrung
     for(const c of setCards) out.push(c.card);
