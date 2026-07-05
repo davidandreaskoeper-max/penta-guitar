@@ -808,7 +808,7 @@ function triadCard(shape,uid){
   const movable=maxF>4;
   const startFret=movable?minF-1:0;
   const rows=4, cols=6, cw=20, rh=28, em=7;
-  const padL=26, padR=16, padTop=24, padBot=18;
+  const padL=40, padR=16, padTop=24, padBot=18;   // linker Rand groß genug für 2-stellige „12fr"-Labels
   const W=padL+padR+(cols-1)*cw, H=padTop+rows*rh+padBot;
   const sx=i=>padL+i*cw, lineY=r=>padTop+r*rh, fy=fr=>padTop+(fr-startFret-0.5)*rh;
   const bx0=sx(0)-em, bw=(cols-1)*cw+2*em, by0=padTop-6, bh=rows*rh+12, markY=by0-9;
