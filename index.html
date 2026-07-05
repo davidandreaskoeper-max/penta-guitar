@@ -563,9 +563,9 @@ function currentWindow(){
 }
 
 /* Dreiklang-Formen (3 benachbarte Saiten, vollständiger Dreiklang) für gegebene
-   Tonklassen, innerhalb des aktuellen Fensters – je Saitensatz die engste Form */
-function triadShapesFor(pcs){
-  const {lo,hi}=currentWindow();
+   Tonklassen, innerhalb des Fensters – je Saitensatz die engste Form */
+function triadShapesFor(pcs, win){
+  const {lo,hi}=win||currentWindow();
   const cand=s=>{let a=[];for(let f=lo;f<=hi;f++){const pc=(OPEN[s]+f)%12;if(pcs.includes(pc))a.push({f,pc});}return a;};
   const shapes=[];
   for(let a=0;a<=3;a++){                      // string sets low->high
@@ -585,9 +585,15 @@ function getTriads(){
   const sc=SCALES[state.type], root=state.root;
   return triadShapesFor(sc.chord.map(o=>(root+o)%12));
 }
+/* Lagenfenster im Akkord-Modus um 2 Bünde je Seite erweitern – damit mehr
+   Umkehrungen greifbar sind (Skala wird im gleichen Fenster gezeigt) */
+function chordWindow(){
+  const {lo,hi}=currentWindow(), v=viewWindow();
+  return {lo:Math.max(v.lo,lo-2), hi:Math.min(v.hi,hi+2)};
+}
 /* die greifbaren Umkehrungen des gewählten Tonart-Akkords in der aktuellen Lage */
 function keyChordShapes(){
-  return state.showChord===null ? [] : triadShapesFor(keyChords()[state.showChord].tones);
+  return state.showChord===null ? [] : triadShapesFor(keyChords()[state.showChord].tones, chordWindow());
 }
 /* Umkehrung aus dem Basston (tiefster Ton) relativ zum Akkord-Grundton */
 function chordInvName(notes,rootPc){
@@ -614,6 +620,16 @@ function neckCells(){
   if(w>=760)  return 9;
   return 6;
 }
+/* sichtbares Fenster (konstante Bundzahl, Lage zentriert) als {lo,hi} */
+function viewWindow(){
+  if(state.pos==="all") return {lo:0,hi:FRETS};
+  const {lo,hi}=currentWindow(), WIN=Math.min(FRETS,neckCells());
+  let dMin=Math.round((lo+hi)/2 - WIN/2), dMax=dMin+WIN;
+  if(dMin<0){dMin=0;dMax=WIN;}
+  if(dMax>FRETS){dMax=FRETS;dMin=FRETS-WIN;}
+  if(dMin<0)dMin=0;
+  return {lo:dMin,hi:dMax};
+}
 
 /* ---------- build neck SVG (compact box, or full neck for "Ganzer Hals") ---------- */
 function neckSVG(){
@@ -627,18 +643,12 @@ function neckSVG(){
   const {lo,hi}=currentWindow();
   const FULL = state.pos==="all";
   const openCol = FULL || lo===0;
-  // Festes Fenster mit konstanter Bundzahl -> immer gleich groß. Die Lage (lo..hi)
-  // wird zentriert; am Hals-Ende wird das Fenster verschoben, nicht beschnitten.
-  let dMin, dMax;
-  if(FULL){ dMin=0; dMax=FRETS; }
-  else {
-    const WIN=Math.min(FRETS, neckCells());
-    dMin=Math.round((lo+hi)/2 - WIN/2);
-    dMax=dMin+WIN;
-    if(dMin<0){ dMin=0; dMax=WIN; }
-    if(dMax>FRETS){ dMax=FRETS; dMin=FRETS-WIN; }
-    if(dMin<0) dMin=0;
-  }
+  // Festes, konstant breites Fenster -> Griffbrett immer gleich groß (siehe viewWindow).
+  const {lo:dMin,hi:dMax}=viewWindow();
+  // im Akkord-Modus Lage um 2 Bünde erweitern (mehr Umkehrungen + Skalen-Kontext),
+  // aber im sichtbaren Fenster bleibend
+  const loN = chordMode ? Math.max(dMin,lo-2) : lo;
+  const hiN = chordMode ? Math.min(dMax,hi+2) : hi;
   const nCells=dMax-dMin;
   const cellW=54, padL=22, padR=14, padT=20, rowH=38, padB=32;
   const openW=openCol?40:14;
@@ -746,7 +756,7 @@ function neckSVG(){
     for(let s=0;s<6;s++)for(let f=dMin;f<=dMax;f++){
       const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
       if(!offs.includes(iv)) continue;
-      if(state.pos!=="all" && (f<lo||f>hi)) continue;        // in der Lage bleiben
+      if(state.pos!=="all" && (f<loN||f>hiN)) continue;      // erweitertes Lagenfenster
       if(hot.has(s+"_"+f)) continue;                         // gehört zur Akkordform → unten hervorgehoben
       const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":lblMap[iv];
       drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
