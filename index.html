@@ -880,23 +880,36 @@ function triadCard(shape,uid){
   return s;
 }
 
-/* classic chord grips — minor & major (root pitch-class per shape) */
-const MIN_SHAPES=[
-  {title:"Am",           root:9, frets:[null,0,2,2,1,0]},
-  {title:"Em",           root:4, frets:[0,2,2,0,0,0]},
-  {title:"Dm",           root:2, frets:[null,null,0,2,3,1]},
-  {title:"Am · Barré 5", root:9, frets:[5,7,7,5,5,5]},
-  {title:"Am · G·B·e",   root:9, frets:[null,null,null,2,1,0]},
-  {title:"Am · G·B·e",   root:9, frets:[null,null,null,5,5,5]}
-];
-const MAJ_SHAPES=[
-  {title:"A",            root:9, frets:[null,0,2,2,2,0]},
-  {title:"E",            root:4, frets:[0,2,2,1,0,0]},
-  {title:"D",            root:2, frets:[null,null,0,2,3,2]},
-  {title:"G",            root:7, frets:[3,2,0,0,0,3]},
-  {title:"C",            root:0, frets:[null,3,2,0,1,0]},
-  {title:"A · Barré 5",  root:9, frets:[5,7,7,6,5,5]}
-];
+/* 3-Ton-Dreiklang-Muster (bewegliche Shapes) — je 3 Umkehrungen auf zwei
+   Saitensätzen, KEINE leeren Saiten, KEIN Barré. Zum Einprägen der Dreier-Muster. */
+function triadPatterns(rootPc, ivs, chordName){
+  const pcs=ivs.map(i=>(rootPc+i)%12);
+  const sets=[{a:3,label:"G·B·e"},{a:2,label:"D·G·B"}];   // obere & mittlere 3 Saiten
+  const out=[];
+  for(const {a,label} of sets){
+    const cand=s=>{let r=[];for(let f=1;f<=FRETS;f++){if(pcs.includes((OPEN[s]+f)%12))r.push(f);}return r;};
+    const c0=cand(a),c1=cand(a+1),c2=cand(a+2),found=[];
+    for(const f0 of c0)for(const f1 of c1)for(const f2 of c2){
+      if(new Set([(OPEN[a]+f0)%12,(OPEN[a+1]+f1)%12,(OPEN[a+2]+f2)%12]).size!==3) continue;  // voller Dreiklang
+      if(Math.max(f0,f1,f2)-Math.min(f0,f1,f2)>4) continue;                                   // spielbar
+      found.push({f0,f1,f2,minF:Math.min(f0,f1,f2)});
+    }
+    found.sort((x,y)=>x.minF-y.minF);
+    const seen={};
+    for(const sh of found){                       // je Umkehrung die tiefste Griffform
+      const notes=[{s:a,f:sh.f0},{s:a+1,f:sh.f1},{s:a+2,f:sh.f2}];
+      const b=notes.reduce((m,n)=>{const mi=MIDI[n.s]+n.f;return mi<m.mi?{mi,pc:(OPEN[n.s]+n.f)%12}:m;},{mi:1e9});
+      const invIdx=ivs.indexOf((b.pc-rootPc+12)%12);
+      if(invIdx in seen) continue; seen[invIdx]=1;
+      const frets=[null,null,null,null,null,null];
+      frets[a]=sh.f0; frets[a+1]=sh.f1; frets[a+2]=sh.f2;
+      out.push({title:`${chordName} · ${label}`, root:rootPc, frets});
+    }
+  }
+  return out;
+}
+const MIN_SHAPES=triadPatterns(9,[0,3,7],"Am");
+const MAJ_SHAPES=triadPatterns(9,[0,4,7],"A");
 /* which inversion: derived from the lowest-sounding (bass) note */
 function chordInv(shape){
   let lo=1e9, bpc=shape.root;
