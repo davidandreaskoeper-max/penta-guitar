@@ -895,7 +895,7 @@ function triadPatterns(rootPc, ivs, chordName){
       found.push({f0,f1,f2,minF:Math.min(f0,f1,f2)});
     }
     found.sort((x,y)=>x.minF-y.minF);
-    const seen={};
+    const seen={}, setCards=[];
     for(const sh of found){                       // je Umkehrung die tiefste Griffform
       const notes=[{s:a,f:sh.f0},{s:a+1,f:sh.f1},{s:a+2,f:sh.f2}];
       const b=notes.reduce((m,n)=>{const mi=MIDI[n.s]+n.f;return mi<m.mi?{mi,pc:(OPEN[n.s]+n.f)%12}:m;},{mi:1e9});
@@ -903,8 +903,10 @@ function triadPatterns(rootPc, ivs, chordName){
       if(invIdx in seen) continue; seen[invIdx]=1;
       const frets=[null,null,null,null,null,null];
       frets[a]=sh.f0; frets[a+1]=sh.f1; frets[a+2]=sh.f2;
-      out.push({title:`${chordName} · ${label}`, root:rootPc, frets});
+      setCards.push({invIdx, card:{title:`${chordName} · ${label}`, root:rootPc, frets}});
     }
+    setCards.sort((x,y)=>x.invIdx-y.invIdx);       // links→rechts: Grundstellung, 1., 2. Umkehrung
+    for(const c of setCards) out.push(c.card);
   }
   return out;
 }
