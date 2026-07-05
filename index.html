@@ -77,10 +77,6 @@
   .chord-name .fn{font-family:"Public Sans";font-size:12.5px;color:var(--ink-soft);font-weight:500}
   .chord-name .dot{color:var(--ink-soft);margin:0 8px;opacity:.6}
   .triad-info .chip strong{font-weight:700;color:var(--copper)}
-  .triad-info .chip.out-hint{color:var(--ink-soft)}
-  .ring-key{display:inline-block;width:15px;height:15px;border-radius:50%;box-sizing:border-box;
-    background:#4c3422;border:1.7px dashed #fff;vertical-align:-3px;margin-right:6px;
-    box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 
   /* ---------- nav d-pad (centered under fretboard) ---------- */
   .fb-row{padding:0 8px}
@@ -944,12 +940,9 @@ function render(){
     const idx=kShapes.length?Math.min(state.chordVar,kShapes.length-1):-1;
     const cur=idx>=0?kShapes[idx]:null;
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
-    const outTones = cur ? cur.map(n=>(OPEN[n.s]+n.f)%12).filter(pc=>!scaleOffs().includes((pc-state.root+12)%12)) : [];
-    const outHint = outTones.length
-      ? ` <span class="chip out-hint"><span class="ring-key"></span>${[...new Set(outTones)].map(pc=>NAMES[pc]).join("·")} außerhalb der Skala</span>` : "";
     ti.innerHTML = cur
       ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${idx+1}</span>`+
-        `<strong>${c.name}</strong> <small>· ${chordInvName(cur,c.rootPc)} · ${triadTones(cur)} · Variante ${idx+1}/${kShapes.length}</small></span>`+outHint
+        `<strong>${c.name}</strong> <small>· ${chordInvName(cur,c.rootPc)} · ${triadTones(cur)} · Variante ${idx+1}/${kShapes.length}</small></span>`
       : `<span class="chip"><strong>${c.rn} · ${c.name}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
