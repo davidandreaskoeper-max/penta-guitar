@@ -117,7 +117,7 @@
   .pedal-img{display:block;width:100%;height:auto;-webkit-user-drag:none;user-select:none;pointer-events:none}
 
   /* OLED-Display — Overlay über dem Displayausschnitt; deckt den eingebrannten Text ab, zeigt Live-Werte */
-  .np-screen{position:absolute;left:27.2%;top:16.6%;width:45.6%;height:14%;
+  .np-screen{position:absolute;left:26.8%;top:16.3%;width:46.4%;height:15%;
     box-sizing:border-box;border-radius:2.4cqw;overflow:hidden;
     display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.4cqw;
     font-family:"Space Mono",monospace;line-height:1.05;color:#f0a52a;
@@ -134,7 +134,7 @@
     text-shadow:0 0 3px rgba(255,150,25,.45);white-space:nowrap;margin-top:.7cqw}
 
   /* Status-LED — Overlay mit orangem Glow, per .off-Klasse ausschaltbar */
-  .pedal-led{position:absolute;left:50%;top:11.5%;transform:translate(-50%,-50%);
+  .pedal-led{position:absolute;left:50%;top:11.9%;transform:translate(-50%,-50%);
     width:3.1%;aspect-ratio:1;border-radius:50%;pointer-events:none;
     background:radial-gradient(circle at 42% 38%, #ffe6b0, #ff8c1a 55%, #7d3400 100%);
     box-shadow:0 0 5px 1px rgba(255,140,26,.8),0 0 12px 4px rgba(255,120,0,.35),inset 0 0 1px rgba(255,255,255,.85);
@@ -144,7 +144,7 @@
 
   /* Vier transparente Fußtaster-Overlays: unsichtbar, nur Klick-/Touchfläche, exakt auf den Metalltastern */
   .np-hit{position:absolute;transform:translate(-50%,-50%);
-    width:16.5%;aspect-ratio:1;border:0;border-radius:50%;background:transparent;
+    width:15.5%;aspect-ratio:1;border:0;border-radius:50%;background:transparent;
     padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;
     transition:transform .09s ease}
   .np-hit::after{content:"";position:absolute;inset:9%;border-radius:50%;pointer-events:none;
@@ -154,10 +154,10 @@
   .np-hit:active{transform:translate(-50%,-50%) translateY(2px) scale(.965)}   /* Druckanimation ~90ms */
   .np-hit:active::after{opacity:1}
   .np-hit:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
-  .np-hit.up{left:50%;top:43%}
-  .np-hit.left{left:30.4%;top:56.7%}
-  .np-hit.right{left:69.6%;top:56.7%}
-  .np-hit.down{left:50%;top:69.6%}
+  .np-hit.up{left:50%;top:42.6%}
+  .np-hit.left{left:29.3%;top:56.4%}
+  .np-hit.right{left:70.5%;top:56.4%}
+  .np-hit.down{left:50%;top:69.2%}
 
   /* ---------- neck panel ---------- */
   .panel{background:linear-gradient(180deg,#f6efe1,var(--parch-2));
