@@ -484,7 +484,7 @@ function scaleLbl(){return state.full?SCALES[state.type].fullLbl:SCALES[state.ty
 const FRETS=15, MARK=[3,5,7,9,15], DBL=12;
 const MIDI=[40,45,50,55,59,64];   // open-string pitches low E .. high e
 
-let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:null,chordVar:0,full:false};
+let state={root:9,type:"minor",pos:"0",label:"none",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:0,chordVar:0,full:false};
 
 /* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
 const QUAL={
@@ -585,15 +585,19 @@ function getTriads(){
   const sc=SCALES[state.type], root=state.root;
   return triadShapesFor(sc.chord.map(o=>(root+o)%12));
 }
-/* Lagenfenster im Akkord-Modus um 2 Bünde je Seite erweitern – damit mehr
-   Umkehrungen greifbar sind (Skala wird im gleichen Fenster gezeigt) */
-function chordWindow(){
+/* Suchfenster für die Griffe: Box + pad Bünde je Seite, im sichtbaren Fenster bleibend */
+function chordWindow(pad){
   const {lo,hi}=currentWindow(), v=viewWindow();
-  return {lo:Math.max(v.lo,lo-2), hi:Math.min(v.hi,hi+2)};
+  return {lo:Math.max(v.lo,lo-pad), hi:Math.min(v.hi,hi+pad)};
 }
-/* die greifbaren Umkehrungen des gewählten Tonart-Akkords in der aktuellen Lage */
+/* greifbare Umkehrungen des gewählten Akkords: normal eng (±1), nur wenn dabei
+   <2 Griffe herauskämen, auf ±2 erweitern – damit ▲▼ überall funktionieren */
 function keyChordShapes(){
-  return state.showChord===null ? [] : triadShapesFor(keyChords()[state.showChord].tones, chordWindow());
+  if(state.showChord===null) return [];
+  const tones=keyChords()[state.showChord].tones;
+  let sh=triadShapesFor(tones, chordWindow(1));
+  if(sh.length<2) sh=triadShapesFor(tones, chordWindow(2));
+  return sh;
 }
 /* Umkehrung aus dem Basston (tiefster Ton) relativ zum Akkord-Grundton */
 function chordInvName(notes,rootPc){
@@ -645,10 +649,6 @@ function neckSVG(){
   const openCol = FULL || lo===0;
   // Festes, konstant breites Fenster -> Griffbrett immer gleich groß (siehe viewWindow).
   const {lo:dMin,hi:dMax}=viewWindow();
-  // im Akkord-Modus Lage um 2 Bünde erweitern (mehr Umkehrungen + Skalen-Kontext),
-  // aber im sichtbaren Fenster bleibend
-  const loN = chordMode ? Math.max(dMin,lo-2) : lo;
-  const hiN = chordMode ? Math.min(dMax,hi+2) : hi;
   const nCells=dMax-dMin;
   const cellW=54, padL=22, padR=14, padT=20, rowH=38, padB=32;
   const openW=openCol?40:14;
@@ -756,7 +756,7 @@ function neckSVG(){
     for(let s=0;s<6;s++)for(let f=dMin;f<=dMax;f++){
       const pc=(OPEN[s]+f)%12, iv=(pc-root+12)%12;
       if(!offs.includes(iv)) continue;
-      if(state.pos!=="all" && (f<loN||f>hiN)) continue;      // erweitertes Lagenfenster
+      if(state.pos!=="all" && (f<lo||f>hi)) continue;        // NUR die aktive Skala/Box (kein Kontext außerhalb)
       if(hot.has(s+"_"+f)) continue;                         // gehört zur Akkordform → unten hervorgehoben
       const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":lblMap[iv];
       drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
@@ -998,8 +998,7 @@ function renderChordPills(){
     `<button class="cpill" data-deg="${i}" aria-pressed="${state.showChord===i}">`+
     `<span class="rn">${c.rn}</span><span class="nm">${c.name}</span></button>`).join("");
   box.querySelectorAll(".cpill").forEach(b=>b.addEventListener("click",()=>{
-    const d=+b.dataset.deg;
-    state.showChord = state.showChord===d ? null : d;   // nochmal tippen = Akkord aus
+    state.showChord = +b.dataset.deg;                   // es ist immer ein Akkord aktiv
     state.chordVar=0;                                   // bei erster Variante starten
     renderChordPills(); render();                       // Lage/Position bleibt unverändert!
   }));
