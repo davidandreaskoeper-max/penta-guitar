@@ -103,10 +103,14 @@
   .cpill[aria-pressed="true"] .rn{color:#1c130b}
   .cpill:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px}
   @media(max-width:620px){
-    /* Flexbox statt Grid: ignoriert die grid-column-Regeln -> Pedal & Pillen sicher zentriert & gestapelt */
-    .navwrap{display:flex;flex-direction:column;align-items:center;gap:16px}
-    .chordbar{flex-direction:row;flex-wrap:wrap;justify-content:center;max-width:340px}
-    .cpill{min-width:0;padding:6px 12px}
+    /* Pedal + Pillen NEBENEINANDER (Pillen als schmale, stark gestauchte Spalte rechts) */
+    .navwrap{display:flex;flex-direction:row;justify-content:center;align-items:center;gap:6px}
+    .navwrap .pedal{width:min(267px,66vw)}
+    .chordwrap{gap:5px;align-self:center}
+    .chordbar{flex-direction:column;gap:4px}
+    .chordbar-title{font-size:9px;letter-spacing:.04em}
+    .cpill{min-width:0;padding:4px 7px;gap:5px;font-size:11px}
+    .cpill .rn{font-size:10px;min-width:24px}
   }
   /* ---------- Foto-Pedal: das Bild ist die Basis, alles Interaktive liegt als %-Overlay darüber ---------- */
   .pedal{grid-column:2;justify-self:center;position:relative;
@@ -226,7 +230,11 @@
   @media(max-width:560px){
     .triads{grid-template-columns:1fr 1fr}
     .swipe-hint{display:block}
-    .controls{grid-template-columns:1fr;gap:10px;padding:14px 12px}
+    .controls{grid-template-columns:auto auto;gap:7px 10px;padding:12px 10px}
+    .controls .ctl label{font-size:9.5px;letter-spacing:.08em}
+    .controls .seg button{padding:5px 7px;font-size:11px}
+    .controls select{padding:6px 24px 6px 9px;font-size:12px}
+    .controls input[type=color]{width:46px;height:34px}
     header{padding:30px 0 16px}
     h1{font-size:clamp(34px,11vw,52px)}
     .sub{font-size:15px}
