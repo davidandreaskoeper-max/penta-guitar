@@ -36,8 +36,9 @@
   .sub b{color:var(--parch);font-weight:700}
 
   /* ---------- controls ---------- */
-  .controls{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;
-    margin:32px auto 6px;padding:18px;border:2px solid #b8902f;border-radius:16px;
+  .controls{display:grid;grid-template-columns:auto auto;gap:11px 22px;
+    justify-content:center;align-items:center;width:max-content;max-width:100%;
+    margin:18px auto 6px;padding:14px 20px;border:2px solid #b8902f;border-radius:16px;
     background:
       radial-gradient(130% 90% at 50% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 42%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 -0.18'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23l)'/%3E%3C/svg%3E"),
@@ -45,7 +46,7 @@
     background-size:auto,170px 170px,auto;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.7),inset 0 2px 6px rgba(255,255,255,.06),
       inset 0 -12px 26px rgba(0,0,0,.55),0 7px 18px rgba(0,0,0,.4)}
-  .ctl{display:flex;flex-direction:column;gap:6px}
+  .ctl{display:flex;flex-direction:column;gap:5px;align-items:center}
   .ctl label{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--brass);opacity:.9}
   .seg{display:flex;border:1px solid rgba(201,138,47,.4);border-radius:10px;overflow:hidden}
@@ -225,7 +226,7 @@
   @media(max-width:560px){
     .triads{grid-template-columns:1fr 1fr}
     .swipe-hint{display:block}
-    .controls{gap:10px;padding:14px 12px}
+    .controls{grid-template-columns:1fr;gap:10px;padding:14px 12px}
     header{padding:30px 0 16px}
     h1{font-size:clamp(34px,11vw,52px)}
     .sub{font-size:15px}
@@ -273,49 +274,6 @@
     <p class="sub">Wähle die Tonart und eine Skala und lass Dir ihre Akkorde anzeigen</p>
   </header>
 
-  <div class="controls">
-    <div class="ctl">
-      <label for="root">Grundton</label>
-      <select id="root" aria-label="Grundton wählen"></select>
-    </div>
-    <div class="ctl">
-      <label>Skala</label>
-      <div class="seg" id="type" role="group" aria-label="Skalentyp">
-        <button data-type="minor" aria-pressed="false">Moll</button>
-        <button data-type="major" aria-pressed="true">Dur</button>
-      </div>
-    </div>
-    <div class="ctl" hidden style="display:none">
-      <label for="pos">Position</label>
-      <select id="pos" aria-label="Position / Lage"></select>
-    </div>
-    <div class="ctl">
-      <label>Beschriftung</label>
-      <div class="seg" id="label" role="group" aria-label="Punkt-Beschriftung">
-        <button data-label="interval" aria-pressed="false">Intervalle</button>
-        <button data-label="note" aria-pressed="true">Töne</button>
-        <button data-label="none" aria-pressed="false">Aus</button>
-      </div>
-    </div>
-    <div class="ctl">
-      <label>Anzeige</label>
-      <div class="seg" id="scope" role="group" aria-label="Umfang der Skala">
-        <button data-full="off" aria-pressed="false">Pentatonik</button>
-        <button data-full="on" aria-pressed="true">Alle Töne</button>
-      </div>
-    </div>
-    <div class="ctl">
-      <label>Grundton</label>
-      <div class="seg" id="roothl" role="group" aria-label="Grundton hervorheben">
-        <button data-root="on" aria-pressed="false">Betont</button>
-        <button data-root="off" aria-pressed="true">Einfarbig</button>
-      </div>
-    </div>
-    <div class="ctl">
-      <label for="chordColor">Akkord-Farbe</label>
-      <input type="color" id="chordColor" value="#c98a2f" aria-label="Farbe der Dreiklänge">
-    </div>
-  </div>
 
   <div class="panel">
     <div class="panel-head">
@@ -408,6 +366,50 @@
         <div class="chordbar-title">Akkorde der Tonart</div>
         <div class="chordbar" id="chordPills" role="group" aria-label="Akkorde der Tonart – zum Hervorheben antippen"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="root">Grundton</label>
+      <select id="root" aria-label="Grundton wählen"></select>
+    </div>
+    <div class="ctl">
+      <label>Skala</label>
+      <div class="seg" id="type" role="group" aria-label="Skalentyp">
+        <button data-type="minor" aria-pressed="false">Moll</button>
+        <button data-type="major" aria-pressed="true">Dur</button>
+      </div>
+    </div>
+    <div class="ctl" hidden style="display:none">
+      <label for="pos">Position</label>
+      <select id="pos" aria-label="Position / Lage"></select>
+    </div>
+    <div class="ctl">
+      <label>Beschriftung</label>
+      <div class="seg" id="label" role="group" aria-label="Punkt-Beschriftung">
+        <button data-label="interval" aria-pressed="false">Intervalle</button>
+        <button data-label="note" aria-pressed="true">Töne</button>
+        <button data-label="none" aria-pressed="false">Aus</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>Anzeige</label>
+      <div class="seg" id="scope" role="group" aria-label="Umfang der Skala">
+        <button data-full="off" aria-pressed="false">Pentatonik</button>
+        <button data-full="on" aria-pressed="true">Alle Töne</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>Grundton</label>
+      <div class="seg" id="roothl" role="group" aria-label="Grundton hervorheben">
+        <button data-root="on" aria-pressed="false">Betont</button>
+        <button data-root="off" aria-pressed="true">Einfarbig</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="chordColor">Akkord-Farbe</label>
+      <input type="color" id="chordColor" value="#c98a2f" aria-label="Farbe der Dreiklänge">
     </div>
   </div>
 
