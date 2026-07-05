@@ -758,7 +758,7 @@ function neckSVG(){
       if(!offs.includes(iv)) continue;
       if(state.pos!=="all" && (f<lo||f>hi)) continue;        // NUR die aktive Skala/Box (kein Kontext außerhalb)
       if(hot.has(s+"_"+f)) continue;                         // gehört zur Akkordform → unten hervorgehoben
-      const lab=state.label==="note"?NAMES[pc]:state.label==="none"?"":lblMap[iv];
+      const lab=state.label==="note"?NAMES[pc]:"";           // Intervall-Ziffern NUR auf den Akkordnoten
       drawDot(s,f,"#efe7d6",shade(CC,.6),lab,`stroke="${CC}" stroke-width="2.3"`);
     }
     // 2) die eine Umkehrung hervorheben; akkordeigene Töne AUSSERHALB der Skala
@@ -968,7 +968,7 @@ function render(){
   if(cm){
     const c=keyChords()[state.showChord];
     const lage = state.pos==="all" ? "Ganzer Hals" : ("Lage "+(+state.pos+1));
-    document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.nash}</span>`;
+    document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.rn}</span>`;
     document.getElementById("npTri").textContent = lage;
   } else {
     const w=currentWindow();
