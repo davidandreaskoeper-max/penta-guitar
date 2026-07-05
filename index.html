@@ -428,9 +428,9 @@
   </div>
 
   <h2><span class="num">↺</span>Die Chord-Shapes</h2>
-  <h3 class="grouplabel">Moll</h3>
+  <h3 class="grouplabel" id="glMinor">Moll</h3>
   <div id="triadMinor" class="triads"></div>
-  <h3 class="grouplabel">Dur</h3>
+  <h3 class="grouplabel" id="glMajor">Dur</h3>
   <div id="triadMajor" class="triads"></div>
 
   <footer>
@@ -901,8 +901,6 @@ function triadPatterns(rootPc, ivs, chordName){
   }
   return out;
 }
-const MIN_SHAPES=triadPatterns(9,[0,3,7],"Am");
-const MAJ_SHAPES=triadPatterns(9,[0,4,7],"A");
 /* which inversion: derived from the lowest-sounding (bass) note */
 function chordInv(shape){
   let lo=1e9, bpc=shape.root;
@@ -977,9 +975,14 @@ function render(){
   document.getElementById("npUp").disabled    = cm ? false : TRI_ORDER.indexOf(state.triads)===TRI_ORDER.length-1;
 }
 function renderTriads(){
-  document.getElementById("triadMinor").innerHTML=MIN_SHAPES.map((sh,i)=>
+  const r=state.root, R=NAMES[r];
+  const minShapes=triadPatterns(r,[0,3,7],R+"m");   // Umkehrungen von {Grundton}m
+  const majShapes=triadPatterns(r,[0,4,7],R);       // Umkehrungen von {Grundton}-Dur
+  document.getElementById("glMinor").textContent=R+"-Moll";
+  document.getElementById("glMajor").textContent=R+"-Dur";
+  document.getElementById("triadMinor").innerHTML=minShapes.map((sh,i)=>
     `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"m"+i)}</div>`).join("");
-  document.getElementById("triadMajor").innerHTML=MAJ_SHAPES.map((sh,i)=>
+  document.getElementById("triadMajor").innerHTML=majShapes.map((sh,i)=>
     `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"M"+i)}</div>`).join("");
 }
 
@@ -1012,7 +1015,7 @@ function fillPos(){
 fillPos();
 // sync controls with the default state
 posSel.value=state.pos;
-rootSel.addEventListener("change",e=>{state.root=+e.target.value;state.chordVar=0;fillPos();renderChordPills();render();});
+rootSel.addEventListener("change",e=>{state.root=+e.target.value;state.chordVar=0;fillPos();renderChordPills();render();renderTriads();});
 posSel.addEventListener("change",e=>{state.pos=e.target.value;state.chordVar=0;render();});
 document.querySelectorAll("#type button").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll("#type button").forEach(x=>x.setAttribute("aria-pressed","false"));
