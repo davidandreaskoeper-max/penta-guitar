@@ -134,6 +134,7 @@
     letter-spacing:0;vertical-align:.1em;text-shadow:0 0 3px rgba(255,150,25,.4)}
   .np-screen i{position:relative;z-index:1;font-style:normal;font-size:4.2cqw;color:#cf913e;
     text-shadow:0 0 3px rgba(255,150,25,.45);white-space:nowrap;margin-top:.7cqw}
+  .np-screen i .fr-tag{font-size:.8em;color:#a8712a;margin-left:.35em}
 
   /* Status-LED — Overlay mit orangem Glow, per .off-Klasse ausschaltbar */
   .pedal-led{position:absolute;left:50%;top:11.9%;transform:translate(-50%,-50%);
@@ -557,9 +558,8 @@ function chordInvIdx(notes,rootPc){
   const b=bassNote(notes), iv=(((OPEN[b.s]+b.f)%12)-rootPc+12)%12;
   return iv===0?0:(iv===3||iv===4)?1:2;
 }
-/* ALLE spielbaren Dreiklang-Griffe im Fenster (nicht nur der beste je Saitensatz) */
-function allTriadGrips(pcs, win){
-  const {lo,hi}=win;
+/* ALLE spielbaren Dreiklang-Voicings (3 benachbarte Saiten, Spanne ≤4) im Fenster */
+function allTriadGrips(pcs, lo, hi){
   const cand=s=>{let a=[];for(let f=lo;f<=hi;f++){const pc=(OPEN[s]+f)%12;if(pcs.includes(pc))a.push({f,pc});}return a;};
   const out=[];
   for(let a=0;a<=3;a++){
@@ -573,18 +573,15 @@ function allTriadGrips(pcs, win){
   }
   return out;
 }
-/* je Umkehrung EINE Griffform (die der Lage am nächsten) – so schaltet ▲▼
-   sauber Root → 1st Inversion → 2nd Inversion durch, und das Display ändert sich immer */
+/* alle greifbaren Voicings in der Lage (inkl. mehrerer auf G·B·e), nach Position
+   sortiert; nur falls <2 in der Box, auf ±1 erweitern (damit ▲▼ nie tot ist) */
 function keyChordShapes(){
   if(state.showChord===null) return [];
-  const kc=keyChords()[state.showChord], raw=allTriadGrips(kc.tones, viewWindow());
-  const {lo,hi}=currentWindow(), center=(lo+hi)/2, byInv={};
-  for(const sh of raw){
-    const idx=chordInvIdx(sh,kc.rootPc);
-    const c=(Math.min(...sh.map(n=>n.f))+Math.max(...sh.map(n=>n.f)))/2, dist=Math.abs(c-center);
-    if(!(idx in byInv)||dist<byInv[idx].dist) byInv[idx]={sh,dist};
-  }
-  return [0,1,2].filter(i=>i in byInv).map(i=>byInv[i].sh);
+  const tones=keyChords()[state.showChord].tones;
+  const {lo,hi}=currentWindow();
+  let grips=allTriadGrips(tones, lo, hi);
+  if(grips.length<2){ const v=viewWindow(); grips=allTriadGrips(tones, Math.max(v.lo,lo-1), Math.min(v.hi,hi+1)); }
+  return grips.sort((a,b)=> Math.min(...a.map(n=>n.f))-Math.min(...b.map(n=>n.f)) || a[0].s-b[0].s);
 }
 
 /* harmonic identity of the triad(s) inside the pentatonic */
@@ -953,7 +950,9 @@ function render(){
     const cur=kShapes.length?kShapes[Math.min(state.chordVar,kShapes.length-1)]:null;
     const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
     document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.rn}</span><span class="lage-tag">${lage}</span>`;
-    document.getElementById("npTri").textContent = cur ? INV_EN[chordInvIdx(cur,c.rootPc)] : "—";
+    document.getElementById("npTri").innerHTML = cur
+      ? `${INV_EN[chordInvIdx(cur,c.rootPc)]}<span class="fr-tag">${Math.min(...cur.map(n=>n.f))}fr</span>`
+      : "—";
   } else {
     const w=currentWindow();
     const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
