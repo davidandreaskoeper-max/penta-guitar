@@ -470,6 +470,9 @@ const MIDI=[40,45,50,55,59,64];   // open-string pitches low E .. high e
 
 let state={root:9,type:"major",pos:"0",label:"note",triads:"1",showRoot:false,chordColor:"#c98a2f",showChord:0,chordVar:0,full:true};
 
+/* „Lieblingslage" berühmter Gitarristen je Lage (Box-Muster, grundton-unabhängig) – Defaults, änderbar */
+const LAGE_ARTIST={ "0":"Jimi Hendrix", "1":"B.B. King", "2":"David Gilmour", "3":"Slash", "4":"Stevie Ray Vaughan" };
+
 /* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
 const QUAL={
   "":   {ivs:[0,4,7], lbl:["1","3","5"], suf:""},   // Dur
@@ -941,10 +944,12 @@ function render(){
     const cur=idx>=0?kShapes[idx]:null;
     const lage = state.pos==="all" ? "H" : (+state.pos+1);   // Lage-Nummer für den Kreis-Badge
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
+    const artist = LAGE_ARTIST[state.pos];
+    const artistTag = artist ? ` <small>— ${artist}'s Favorite</small>` : "";
     ti.innerHTML = cur
       ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Lage ${lage}">${lage}</span>`+
-        `<strong>${c.name}</strong> <small>· Lage ${lage} · ${INV_EN[chordInvIdx(cur,c.rootPc)]} · ${triadTones(cur)}</small></span>`
-      : `<span class="chip"><strong>${c.rn} · ${c.name}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
+        `<strong>Lage ${lage}</strong>${artistTag}</span>`
+      : `<span class="chip"><strong>Lage ${lage}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
       `<span class="fn">— Stufe ${ci.tonic.deg} · ${ci.tonic.fn}</span>`;
