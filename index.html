@@ -939,10 +939,11 @@ function render(){
     const kShapes=keyChordShapes();
     const idx=kShapes.length?Math.min(state.chordVar,kShapes.length-1):-1;
     const cur=idx>=0?kShapes[idx]:null;
+    const lage = state.pos==="all" ? "H" : (+state.pos+1);   // Lage-Nummer für den Kreis-Badge
     cn.innerHTML=`<strong>${c.name}</strong> <span class="fn">— Stufe ${c.rn} in ${keyName}</span>`;
     ti.innerHTML = cur
-      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}">${idx+1}</span>`+
-        `<strong>${c.name}</strong> <small>· ${INV_EN[chordInvIdx(cur,c.rootPc)]} · ${triadTones(cur)}</small></span>`
+      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Lage ${lage}">${lage}</span>`+
+        `<strong>${c.name}</strong> <small>· Lage ${lage} · ${INV_EN[chordInvIdx(cur,c.rootPc)]} · ${triadTones(cur)}</small></span>`
       : `<span class="chip"><strong>${c.rn} · ${c.name}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
