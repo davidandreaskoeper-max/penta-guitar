@@ -215,8 +215,16 @@
   .triads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
   .grouplabel{font-family:"Fraunces",serif;font-weight:600;font-size:20px;color:var(--copper);
     margin:22px 0 2px;text-align:center;letter-spacing:.02em}
-  .tcard{background:linear-gradient(180deg,#f6efe1,var(--parch-2));border-radius:14px;
+  .tcard{position:relative;background:linear-gradient(180deg,#f6efe1,var(--parch-2));border-radius:14px;
     padding:14px 8px 12px;text-align:center;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+  /* Favoriten-Stern zum Merken/Lernen */
+  .fav{position:absolute;top:6px;right:7px;appearance:none;border:0;background:none;cursor:pointer;
+    padding:2px 3px;font-size:19px;line-height:1;color:#b9ac92;transition:transform .12s,color .12s;-webkit-tap-highlight-color:transparent}
+  .fav::before{content:"\2606"}                       /* ☆ leer */
+  .fav[aria-pressed="true"]{color:#e6a92c;text-shadow:0 0 7px rgba(230,169,44,.6)}
+  .fav[aria-pressed="true"]::before{content:"\2605"}  /* ★ gefüllt */
+  .fav:hover{transform:scale(1.18)}
+  .fav:focus-visible{outline:2px solid var(--brass-glow);outline-offset:2px;border-radius:4px}
   .tcard .t-name{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.12em;
     text-transform:uppercase;color:var(--copper);font-weight:700}
   .tcard .t-name .inv{display:block;margin-top:2px;font-size:8.5px;letter-spacing:.06em;
@@ -259,7 +267,7 @@
   /* ---------- print ---------- */
   @media print{
     body{background:#fff!important;color:#1c130b;padding:0 4mm}
-    .no-print,.controls,.printbar,.swipe-hint,footer{display:none!important}
+    .no-print,.controls,.printbar,.swipe-hint,footer,.fav{display:none!important}
     header{padding:4mm 0 3mm}
     h1,.sub,h2,.lead,.note-box{color:#1c130b!important}
     h1 em{color:#9a5a12!important}
@@ -974,12 +982,18 @@ function render(){
   document.getElementById("npDown").disabled  = cm ? false : TRI_ORDER.indexOf(state.triads)===0;
   document.getElementById("npUp").disabled    = cm ? false : TRI_ORDER.indexOf(state.triads)===TRI_ORDER.length-1;
 }
+/* Favoriten (zum Lernen) – pro Voicing, im Browser gespeichert */
+let favs=new Set();
+try{ favs=new Set(JSON.parse(localStorage.getItem("penta-favs")||"[]")); }catch(e){}
+function saveFavs(){ try{ localStorage.setItem("penta-favs",JSON.stringify([...favs])); }catch(e){} }
+function favKey(sh){ return (state.type==="major"?"M":"m")+state.root+"_"+sh.frets.map(f=>f===null?"x":f).join("-"); }
+
 function renderTriads(){
   const r=state.root, R=NAMES[r], major=state.type==="major";
   // nur das aktuell gewählte Tongeschlecht zeigen
   const shapes=triadPatterns(r, major?[0,4,7]:[0,3,7], R+(major?"":"m"));
-  const cards=shapes.map((sh,i)=>
-    `<div class="tcard"><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"t"+i)}</div>`).join("");
+  const cards=shapes.map((sh,i)=>{const k=favKey(sh);
+    return `<div class="tcard"><button class="fav" data-key="${k}" aria-pressed="${favs.has(k)}" aria-label="Favorit zum Lernen" title="Favorit zum Lernen"></button><div class="t-name">${sh.title}<span class="inv">${chordInv(sh)}</span></div>${triadCard(sh,"t"+i)}</div>`;}).join("");
   const show=major?"Major":"Minor", hide=major?"Minor":"Major";
   document.getElementById("gl"+show).textContent = R+(major?"-Dur":"-Moll");
   document.getElementById("gl"+show).style.display="";
@@ -1080,6 +1094,14 @@ document.addEventListener("keydown",e=>{
 
 /* bei Größenänderung / Drehen neu rendern, damit sich die Zahl der
    gezeichneten Bünde an die neue Breite anpasst */
+/* Favoriten-Stern an-/abwählen (Event-Delegation) */
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".fav"); if(!b) return;
+  const k=b.dataset.key, on=!favs.has(k);
+  if(on) favs.add(k); else favs.delete(k);
+  b.setAttribute("aria-pressed",on); saveFavs();
+});
+
 let _rz; window.addEventListener("resize",()=>{clearTimeout(_rz);_rz=setTimeout(render,150);});
 
 renderChordPills(); render(); renderTriads();
