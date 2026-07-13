@@ -125,24 +125,29 @@
     filter:drop-shadow(0 9px 15px rgba(38,26,14,.34))}
 
   /* OLED-Display — Overlay über dem Displayausschnitt; deckt den eingebrannten Text ab, zeigt Live-Werte */
-  .np-screen{position:absolute;left:26.8%;top:16.3%;width:46.4%;height:15%;
+  .np-screen{position:absolute;left:26%;top:15.4%;width:48%;height:16.8%;
     box-sizing:border-box;border-radius:2.4cqw;overflow:hidden;
-    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.4cqw;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.3cqw;
     font-family:"Space Mono",monospace;line-height:1.05;color:#f0a52a;
     background:radial-gradient(120% 95% at 50% 20%, #231d14 0%, #17130d 55%, #0c0a07 100%);
     box-shadow:inset 0 0 8px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.05)}
   .np-screen::before{content:"";position:absolute;inset:0;pointer-events:none;
     background:linear-gradient(160deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 42%)}
-  .np-screen b{position:relative;z-index:1;font-size:7.4cqw;font-weight:700;color:#ff9e1b;
+  .np-screen b{position:relative;z-index:1;font-size:7.6cqw;font-weight:700;color:#ff9e1b;
     letter-spacing:.02em;text-shadow:0 0 5px rgba(255,140,20,.75);white-space:nowrap}
   .np-screen b .deg-tag{display:inline-block;margin-left:.45em;padding:0 .45em;border-radius:.32em;
     font-size:.72em;font-weight:700;color:#1a1206;background:#ff9e1b;vertical-align:.14em;
     text-shadow:none;box-shadow:0 0 4px rgba(255,150,25,.55)}
-  .np-screen b .lage-tag{margin-left:.5em;font-size:.58em;font-weight:700;color:#cf913e;
-    letter-spacing:0;vertical-align:.1em;text-shadow:0 0 3px rgba(255,150,25,.4)}
-  .np-screen i{position:relative;z-index:1;font-style:normal;font-size:4.2cqw;color:#cf913e;
-    text-shadow:0 0 3px rgba(255,150,25,.45);white-space:nowrap;margin-top:.7cqw}
+  .np-screen i{position:relative;z-index:1;font-style:normal;font-size:4.1cqw;color:#cf913e;
+    text-shadow:0 0 3px rgba(255,150,25,.45);white-space:nowrap;margin-top:.5cqw}
   .np-screen i .fr-tag{font-size:.8em;color:#a8712a;margin-left:.35em}
+  /* CAGED-Zeile: alle fünf Buchstaben gedimmt, der zur aktuellen Box gehörende fett & hell.
+     Spacing NUR auf den Buchstaben (.cg), damit das „Box N · "-Präfix nicht auseinandergezogen
+     und im schmalen OLED abgeschnitten wird. */
+  .np-caged{position:relative;z-index:1;font-size:3.9cqw;font-weight:400;color:#6f5024;
+    margin-top:.45cqw;white-space:nowrap;text-shadow:0 0 2px rgba(255,150,25,.2)}
+  .np-caged .cg{letter-spacing:.3em;margin-left:.3em}
+  .np-caged .on{font-weight:800;color:#ff9e1b;text-shadow:0 0 6px rgba(255,150,25,.9)}
 
   /* Status-LED — Overlay mit orangem Glow, per .off-Klasse ausschaltbar */
   .pedal-led{position:absolute;left:50%;top:11.9%;transform:translate(-50%,-50%);
@@ -300,7 +305,7 @@
       <div class="formula" id="scaleFormula">1 · ♭3 · 4 · 5 · ♭7</div>
     </div>
     <div class="chord-name" id="triadChord"><strong>Am</strong> <span class="fn">— Stufe i · Tonika</span></div>
-    <div class="triad-info" id="triadInfo"><span class="chip"><span class="badge" style="background:#c98a2f;color:#fff" title="Lage 1">1</span><strong>Lage 1</strong> <small>· Eric Clapton · Angus Young · Noel Gallagher</small></span></div>
+    <div class="triad-info" id="triadInfo"><span class="chip"><span class="badge" style="background:#c98a2f;color:#fff" title="Box 1">1</span><strong>Box 1</strong> <small>· Eric Clapton · Angus Young · Noel Gallagher</small></span></div>
     <div class="fb-row">
       <div class="scroller" id="neckScroll"><svg viewBox="0 0 266 242" width="266" height="242" role="img" aria-label="A Moll-Pentatonik Griffbrett"><defs>
     <linearGradient id="ebony" x1="0" y1="0" x2="0" y2="1">
@@ -374,11 +379,11 @@
     <div class="navwrap no-print">
       <div class="pedal">
         <img class="pedal-img" src="pedal.png?v=3" width="800" height="1200" alt="Akkord-Pedal" decoding="async">
-        <div class="np-screen" role="img" aria-label="Pedal-Display"><b id="npPos"></b><i id="npTri"></i></div>
+        <div class="np-screen" role="img" aria-label="Pedal-Display"><b id="npPos"></b><i id="npTri"></i><span id="npCaged" class="np-caged" aria-hidden="true"></span></div>
         <span class="pedal-led" id="pedalLed" aria-hidden="true"></span>
         <button class="np-hit up"    id="npUp"    aria-label="Umkehrung höher"></button>
-        <button class="np-hit left"  id="npLeft"  aria-label="Lage tiefer"></button>
-        <button class="np-hit right" id="npRight" aria-label="Lage höher"></button>
+        <button class="np-hit left"  id="npLeft"  aria-label="Box tiefer"></button>
+        <button class="np-hit right" id="npRight" aria-label="Box höher"></button>
         <button class="np-hit down"  id="npDown"  aria-label="Umkehrung tiefer"></button>
       </div>
       <div class="chordwrap">
@@ -402,7 +407,7 @@
     </div>
     <div class="ctl" hidden style="display:none">
       <label for="pos">Position</label>
-      <select id="pos" aria-label="Position / Lage"></select>
+      <select id="pos" aria-label="Position / Box"></select>
     </div>
     <div class="ctl">
       <label>Beschriftung</label>
@@ -485,6 +490,15 @@ const LAGE_ARTIST={
 };
 /* Namen einer Lage als „A · B · C"-String (leer bei ganzem Hals / unbekannter Lage) */
 function lageArtists(pos){ const a=LAGE_ARTIST[pos]; return Array.isArray(a) ? a.join(" · ") : ""; }
+
+/* CAGED-Form je Box: Box 1=Root-Box=E-Form, dann rückwärts D·C·A·G den Hals hoch */
+const BOX_TO_CAGED=["E","D","C","A","G"];
+/* „CAGED" als HTML (Buchstaben in .cg gespreizt), der zur Box gehörende hervorgehoben (.on) */
+function cagedHTML(pos){
+  const active = pos==="all" ? null : BOX_TO_CAGED[Math.min(+pos,4)];
+  const inner = "CAGED".split("").map(ch=>ch===active?`<span class="on">${ch}</span>`:ch).join("");
+  return `<span class="cg">${inner}</span>`;
+}
 
 /* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
 const QUAL={
@@ -960,16 +974,16 @@ function render(){
     const names = lageArtists(state.pos);
     const artistTag = names ? ` <small>· ${names}</small>` : "";
     ti.innerHTML = cur
-      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Lage ${lage}">${lage}</span>`+
-        `<strong>Lage ${lage}</strong>${artistTag}</span>`
-      : `<span class="chip"><strong>Lage ${lage}</strong> <small>· in dieser Lage nicht greifbar – Lage mit ◀▶ wechseln</small></span>`;
+      ? `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Box ${lage}">${lage}</span>`+
+        `<strong>Box ${lage}</strong>${artistTag}</span>`
+      : `<span class="chip"><strong>Box ${lage}</strong> <small>· in dieser Box nicht greifbar – Box mit ◀▶ wechseln</small></span>`;
   } else if(state.triads!=="all"){
     cn.innerHTML=`<strong>${ci.tonic.name}</strong> `+
       `<span class="fn">— Stufe ${ci.tonic.deg} · ${ci.tonic.fn}</span>`;
     const lage = state.pos==="all" ? "H" : (+state.pos+1);
     const names = lageArtists(state.pos);
     const artistTag = names ? ` <small>· ${names}</small>` : "";
-    ti.innerHTML = `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Lage ${lage}">${lage}</span><strong>Lage ${lage}</strong>${artistTag}</span>`;
+    ti.innerHTML = `<span class="chip"><span class="badge" style="background:${state.chordColor};color:${textOn(state.chordColor)}" title="Box ${lage}">${lage}</span><strong>Box ${lage}</strong>${artistTag}</span>`;
   } else {
     cn.innerHTML=`Enthaltene Akkorde: <strong>${ci.tonic.name}</strong> `+
       `<span class="fn">(Stufe ${ci.tonic.deg}, ${ci.tonic.fn})</span>`+
@@ -982,17 +996,20 @@ function render(){
   if(cm){
     const c=keyChords()[state.showChord], kShapes=keyChordShapes();
     const cur=kShapes.length?kShapes[Math.min(state.chordVar,kShapes.length-1)]:null;
-    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
-    document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.rn}</span><span class="lage-tag">${lage}</span>`;
+    const box = state.pos==="all" ? "Hals" : ("Box "+(+state.pos+1));
+    document.getElementById("npPos").innerHTML = `${c.name}<span class="deg-tag">${c.rn}</span>`;
     document.getElementById("npTri").innerHTML = cur
       ? `${INV_EN[chordInvIdx(cur,c.rootPc)]}<span class="fr-tag">${Math.min(...cur.map(n=>n.f))}fr</span>`
       : "—";
+    document.getElementById("npCaged").innerHTML =
+      state.pos==="all" ? "ganzer Hals" : `${box} · ${cagedHTML(state.pos)}`;
   } else {
     const w=currentWindow();
-    const lage = state.pos==="all" ? "Hals" : ("Lage "+(+state.pos+1));
-    document.getElementById("npPos").textContent = lage;
+    const box = state.pos==="all" ? "Hals" : ("Box "+(+state.pos+1));
+    document.getElementById("npPos").textContent = box;
     document.getElementById("npTri").textContent =
       (state.pos==="all"?"":(w.lo+"–"+w.hi)) + (state.triads==="all" ? " · Skala" : " · △"+state.triads);
+    document.getElementById("npCaged").innerHTML = state.pos==="all" ? "" : cagedHTML(state.pos);
   }
   const sh=document.getElementById("swipeHint"); if(sh) sh.style.display = state.pos==="all" ? "" : "none";
   document.getElementById("npLeft").disabled  = false;
@@ -1045,7 +1062,7 @@ function fillPos(){
   posSel.innerHTML="";
   const all=document.createElement("option");all.value="all";all.textContent="Ganzer Hals";posSel.appendChild(all);
   for(let i=0;i<5;i++){const w=boxWindow(i);const o=document.createElement("option");o.value=String(i);
-    o.textContent=`Lage ${i+1} · Bünde ${w.lo}–${w.hi}`;posSel.appendChild(o);}
+    o.textContent=`Box ${i+1} · Bünde ${w.lo}–${w.hi}`;posSel.appendChild(o);}
   posSel.value=prev;
 }
 fillPos();
