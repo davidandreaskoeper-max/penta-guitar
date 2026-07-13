@@ -239,6 +239,13 @@
     text-transform:none;font-weight:400;color:var(--ink-soft)}
   .tcard svg{margin:6px auto 0;display:block;max-width:100%;height:auto}
 
+  /* Box-Akkord (CAGED-Griff der aktuellen Box), unter dem Pedal */
+  .boxchord{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 8px 2px;margin-top:4px}
+  .boxchord-title{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-soft);text-align:center}
+  .boxchord-title .bc-form{color:var(--copper);font-weight:700}
+  .boxchord-card .tcard{margin:0;width:150px;max-width:60vw;padding:12px 8px 10px}
+
   footer{text-align:center;margin-top:60px;color:#8c7e68;font-size:13px;
     font-family:"Space Mono",monospace;letter-spacing:.06em}
   footer a{color:var(--brass)}
@@ -382,14 +389,18 @@
         <div class="np-screen" role="img" aria-label="Pedal-Display"><b id="npPos"></b><i id="npTri"></i><span id="npCaged" class="np-caged" aria-hidden="true"></span></div>
         <span class="pedal-led" id="pedalLed" aria-hidden="true"></span>
         <button class="np-hit up"    id="npUp"    aria-label="Umkehrung höher"></button>
-        <button class="np-hit left"  id="npLeft"  aria-label="Box tiefer"></button>
-        <button class="np-hit right" id="npRight" aria-label="Box höher"></button>
+        <button class="np-hit left"  id="npLeft"  aria-label="Box down"></button>
+        <button class="np-hit right" id="npRight" aria-label="Box up"></button>
         <button class="np-hit down"  id="npDown"  aria-label="Umkehrung tiefer"></button>
       </div>
       <div class="chordwrap">
         <div class="chordbar-title">Akkorde der Tonart</div>
         <div class="chordbar" id="chordPills" role="group" aria-label="Akkorde der Tonart – zum Hervorheben antippen"></div>
       </div>
+    </div>
+    <div class="boxchord no-print" id="boxChordWrap">
+      <div class="boxchord-title">Akkord dieser Box <span class="bc-form" id="bcForm"></span></div>
+      <div class="boxchord-card" id="boxChord"></div>
     </div>
   </div>
 
@@ -498,6 +509,52 @@ function cagedHTML(pos){
   const active = pos==="all" ? null : BOX_TO_CAGED[Math.min(+pos,4)];
   const inner = "CAGED".split("").map(ch=>ch===active?`<span class="on">${ch}</span>`:ch).join("");
   return `<span class="cg">${inner}</span>`;
+}
+
+/* ---- CAGED-Akkord der Box: Tonika-Dreiklang in der CAGED-Form dieser Box ----
+   Intervall je Saite [E,A,D,G,B,e] (null=stumm): 0=Grundton, 3/4=Terz, 7=Quinte.
+   Griff-Mathematik headless verifiziert (alle 12 Grundtöne × Dur/Moll × 5 Boxen). */
+const CAGED_GRIP={
+  major:[[0,7,0,4,7,0],[null,null,0,7,0,4],[null,0,4,7,0,4],[null,0,7,0,4,7],[0,4,7,0,4,0]],
+  minor:[[0,7,0,3,7,0],[null,null,0,7,0,3],[null,0,3,7,0,null],[null,0,7,0,3,7],[0,7,0,3,null,null]]
+};
+/* platziere die Form im/nahe dem Box-Fenster; Oktave in den Bundbereich [0,FRETS] normalisiert */
+function placeGrip(intervals, R, boxLo){
+  for(let w=Math.max(0,boxLo-1); w<=boxLo+4; w++){
+    let ok=true;
+    const frets=intervals.map((iv,s)=>{
+      if(iv===null) return null;
+      const pc=(R+iv)%12;
+      for(let f=w; f<=w+3; f++) if(((OPEN[s]+f)%12)===pc) return f;
+      ok=false; return null;
+    });
+    if(ok){
+      let mx=Math.max(...frets.filter(f=>f!==null));
+      while(mx>FRETS){ for(let i=0;i<6;i++) if(frets[i]!==null) frets[i]-=12; mx-=12; }
+      let mn=Math.min(...frets.filter(f=>f!==null));
+      while(mn<0){ for(let i=0;i<6;i++) if(frets[i]!==null) frets[i]+=12; mn+=12; }
+      return frets;
+    }
+  }
+  return null;
+}
+/* Shape-Objekt (für triadCard): Tonika in der CAGED-Form der aktuellen Box */
+function cagedChordShape(){
+  if(state.pos==="all") return null;
+  const p=Math.min(+state.pos,4), R=state.root, major=state.type==="major";
+  const frets=placeGrip(CAGED_GRIP[major?"major":"minor"][p], R, boxWindow(p).lo);
+  if(!frets) return null;
+  return {frets, root:R, title:`${NAMES[R]}${major?"-Dur":"-Moll"} · ${BOX_TO_CAGED[p]}-Form`};
+}
+/* Box-Akkord-Karte rendern (unter dem Pedal); bei „Ganzer Hals" ausgeblendet */
+function renderBoxChord(){
+  const wrap=document.getElementById("boxChordWrap");
+  if(!wrap) return;
+  const sh=cagedChordShape();
+  if(!sh){ wrap.style.display="none"; document.getElementById("boxChord").innerHTML=""; return; }
+  wrap.style.display="";
+  document.getElementById("bcForm").textContent = `· ${sh.title}`;
+  document.getElementById("boxChord").innerHTML = `<div class="tcard">${triadCard(sh,"bc")}</div>`;
 }
 
 /* ---------- diatonische Akkorde der Tonart (natürl. Moll bzw. Dur) ---------- */
@@ -1016,6 +1073,7 @@ function render(){
   document.getElementById("npRight").disabled = false;
   document.getElementById("npDown").disabled  = cm ? false : TRI_ORDER.indexOf(state.triads)===0;
   document.getElementById("npUp").disabled    = cm ? false : TRI_ORDER.indexOf(state.triads)===TRI_ORDER.length-1;
+  renderBoxChord();                                  // CAGED-Akkord der aktuellen Box
 }
 /* Favoriten (zum Lernen) – pro Voicing, im Browser gespeichert */
 let favs=new Set();
