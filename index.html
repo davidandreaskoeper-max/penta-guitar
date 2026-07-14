@@ -657,8 +657,8 @@ function viewWindow(){
   const {lo,hi}=currentWindow(), WIN=Math.min(FRETS,neckCells());
   let dMin=Math.round((lo+hi)/2 - WIN/2), dMax=dMin+WIN;
   if(dMin<0){dMin=0;dMax=WIN;}
-  if(dMax>FRETS){dMax=FRETS;dMin=FRETS-WIN;}
-  if(dMin<0)dMin=0;
+  // Box zentriert lassen – auch hoch am Hals. NICHT nach links klemmen (sonst sitzt die
+  // Skala rechts neben dem mittigen Pedal); hohe Boxen zeigen dann rechts ein paar leere Bünde.
   return {lo:dMin,hi:dMax};
 }
 
